@@ -1,0 +1,7 @@
+subscription_id = "ff9cce9f-71fe-4f87-ae04-e106a1a6ffb1"
+tenant_id = "b0c33ece-98f7-4f4d-bc31-8aad22f835c2"
+environment = "dev"
+location = "westeurope"
+monthly_budget_eur = 120
+# Set your email to enable Azure budget notifications:
+budget_contact_emails = []

@@ -1,0 +1,14 @@
+﻿{
+    "environment":  "dev",
+    "projectName":  "Cira Investment Intelligence",
+    "trading":  {
+                    "brokerAccess":  "read-only",
+                    "requireHumanApproval":  true,
+                    "autonomousExecution":  false
+                },
+    "azure":  {
+                  "resourceGroup":  "rg-cira-dev",
+                  "location":  "swedencentral",
+                  "monthlyBudgetEUR":  150
+              }
+}

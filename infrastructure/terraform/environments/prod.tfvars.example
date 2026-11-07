@@ -1,0 +1,6 @@
+subscription_id = "REPLACE_WITH_PROD_SUBSCRIPTION_ID"
+tenant_id = "REPLACE_WITH_PROD_TENANT_ID"
+environment = "prod"
+location = "westeurope"
+monthly_budget_eur = 200
+budget_contact_emails = []

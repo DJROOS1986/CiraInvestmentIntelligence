@@ -1,0 +1,41 @@
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfplan
+**/backend.hcl
+**/*.tfvars
+!**/*.tfvars.example
+.env
+__pycache__/
+
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfplan
+*.tfvars
+*.tfvars.json
+*.auto.tfvars
+*.auto.tfvars.json
+crash.log
+crash.*.log
+
+# Terraform local backend configuration
+**/backend.hcl
+
+# Secrets
+.env
+.env.*
+!.env.example
+*.pem
+*.pfx
+*.key
+
+# Python
+__pycache__/
+.venv/
+*.pyc
+
+# Editor
+.vscode/*.log
+*.tf.backup

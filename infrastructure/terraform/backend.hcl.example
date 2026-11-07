@@ -1,0 +1,5 @@
+resource_group_name  = "rg-cira-tfstate"
+storage_account_name = "REPLACE_WITH_BOOTSTRAP_STORAGE_NAME"
+container_name       = "tfstate"
+key                  = "cira/dev.tfstate"
+use_azuread_auth     = true
