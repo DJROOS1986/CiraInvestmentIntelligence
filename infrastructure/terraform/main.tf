@@ -39,7 +39,7 @@ resource "azurerm_consumption_budget_resource_group" "monthly" {
   count             = length(var.budget_contact_emails) > 0 ? 1 : 0
   name              = "budget-${local.prefix}"
   resource_group_id = azurerm_resource_group.main.id
-  amount            = var.monthly_budget_eur
+  amount            = var.monthly_budget_amount
   time_grain        = "Monthly"
   time_period { start_date = "2026-11-01T00:00:00Z" }
   notification {

@@ -9,6 +9,7 @@
 __pycache__/
 
 # Terraform
+.tools/
 **/.terraform/
 *.tfstate
 *.tfstate.*
@@ -39,3 +40,48 @@ __pycache__/
 # Editor
 .vscode/*.log
 *.tf.backup
+*.tf.backend-backup
+*.ps1.bak
+backend.hcl
+.terraform/
+
+# CIRA local configuration and credentials
+.env
+.env.*
+!.env.example
+ingestion/config.json
+**/*.pem
+**/*.pfx
+**/*.key
+**/credentials.json
+
+# Terraform local state and sensitive inputs
+**/.terraform/
+**/*.tfstate
+**/*.tfstate.*
+**/*.tfvars
+!**/*.tfvars.example
+**/crash.log
+**/crash.*.log
+**/*tfplan*
+**/*plan-review.txt
+
+# Generated financial and ingestion data
+/reports/
+/audit-reports/
+/ingestion/output/
+
+# Backups and archives
+*.bak
+*.bak.*
+*.backup-*
+*.zip
+
+# Python local artifacts
+__pycache__/
+*.pyc
+.venv/
+.pytest_cache/
+
+# Local logs
+*.log

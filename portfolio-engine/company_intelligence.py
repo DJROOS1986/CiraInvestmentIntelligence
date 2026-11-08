@@ -1,0 +1,69 @@
+"""CIRA Phase 5: combined company intelligence."""
+import math
+from datetime import datetime, timezone
+
+def require_object(value, label):
+    if not isinstance(value, dict):
+        raise ValueError(f'{label} must be a JSON object')
+    return value
+
+def require_ticker(value, expected, label):
+    if not isinstance(value, str) or value.upper() != expected:
+        raise ValueError(f'{label} ticker does not match {expected}')
+
+def optional_number(value, label):
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f'{label} must be numeric or null')
+    if not math.isfinite(value):
+        raise ValueError(f'{label} must be finite')
+    return value
+
+def build_company_intelligence(ticker, financial, prices, market, bcg_assessment, run_id=None):
+    if run_id is not None:
+        if not isinstance(run_id, str) or not run_id.strip():
+            raise ValueError('Invalid processing run ID')
+    ticker = ticker.upper().strip()
+    if ticker not in {'AAPL', 'MSFT'}:
+        raise ValueError('Ticker not approved for initial integration')
+    for (label, value) in (('financial', financial), ('prices', prices), ('market', market), ('bcg', bcg_assessment)):
+        require_object(value, label)
+    require_ticker(financial.get('ticker'), ticker, 'Financial')
+    require_ticker(prices.get('symbol'), ticker, 'Price')
+    require_ticker(market.get('symbol'), ticker, 'Market')
+    require_ticker(bcg_assessment.get('ticker'), ticker, 'BCG')
+    metrics = require_object(financial.get('metrics_usd'), 'Financial metrics')
+    records = prices.get('records')
+    if not isinstance(records, list) or not records:
+        raise ValueError('Historical prices must contain records')
+    if not all((isinstance(item, dict) for item in records)):
+        raise ValueError('Invalid historical price record')
+    observations = market.get('observations')
+    if isinstance(observations, bool) or not isinstance(observations, int) or observations != len(records):
+        raise ValueError('Market observation count mismatch')
+    price_currency = prices.get('currency')
+    market_currency = market.get('currency')
+    price_type = prices.get('price_type')
+    if not price_currency or price_currency != market_currency:
+        raise ValueError('Market currency mismatch')
+    if not price_type or price_type != market.get('price_type'):
+        raise ValueError('Market price type mismatch')
+    last_date = max((str(item.get('date', '')) for item in records))
+    if last_date != market.get('last_date'):
+        raise ValueError('Market last date mismatch')
+    warnings = []
+    if not bcg_assessment.get('research_available'):
+        warnings.append('BCG research unavailable for this ticker')
+    elif bcg_assessment.get('verified_bcg_class') is None:
+        warnings.append('BCG classification is not independently verified')
+    else:
+        warnings.append('BCG classification is source-reported, not independently verified')
+    if ticker == 'MSFT':
+        warnings.append('Microsoft BCG growth figure refers to Azure segment growth, not independently verified market growth')
+    if price_type != 'adjusted':
+        warnings.append('Historical price returns may exclude dividends and corporate-action adjustments')
+    warnings.append('Financial reporting periods and market dates are not synchronized')
+    financial_values = {key: optional_number(metrics.get(key), key) for key in ('revenue', 'net_income', 'total_assets', 'total_liabilities', 'operating_cash_flow', 'capital_expenditure', 'free_cash_flow')}
+    market_values = {key: optional_number(market.get(key), key) for key in ('latest_close', 'daily_return_pct', 'period_price_change_pct', 'sma_5', 'sma_20', 'annualized_volatility_pct')}
+    return {'schema_version': '1.0', 'ticker': ticker, 'company': financial.get('company'), 'generated_at_utc': datetime.now(timezone.utc).isoformat(), 'financial': {'source': 'SEC financial report', 'period_end': financial.get('period_end'), 'currency': financial.get('currency'), 'metrics_usd': financial_values, 'provenance': financial.get('provenance'), 'report_generated_at_utc': financial.get('generated_at_utc')}, 'market': {'provider': market.get('provider'), 'retrieved_at_utc': prices.get('retrieved_at_utc'), 'currency': market_currency, 'price_type': price_type, 'first_date': market.get('first_date'), 'last_date': market.get('last_date'), 'observations': observations, 'indicators': market_values, 'return_basis': market.get('return_basis')}, 'bcg': dict(bcg_assessment), 'data_quality': {'warnings': warnings, 'independently_verified_bcg': False, 'investment_recommendation': None}, None: {'run_id': run_id} if run_id is not None else {}}

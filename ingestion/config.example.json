@@ -1,0 +1,9 @@
+{
+  "storage_account": "stciradeva2pjnb",
+  "container": "raw-filings",
+  "companies": [
+    {"ticker": "AAPL", "cik": "0000320193"},
+    {"ticker": "MSFT", "cik": "0000789019"}
+  ],
+  "sec_user_agent": "CiraInvestmentIntelligence contact@example.com"
+}

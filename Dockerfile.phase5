@@ -1,0 +1,43 @@
+FROM python:3.10-slim
+
+ENV PYTHONDONTWRITEBYTECODE=1
+ENV PYTHONUNBUFFERED=1
+ENV PYTHONPATH=/app
+
+WORKDIR /app
+
+COPY ingestion/requirements.txt /app/requirements.txt
+
+RUN pip install --no-cache-dir -r /app/requirements.txt \
+    && pip install --no-cache-dir "requests>=2.31,<3"
+
+COPY ingestion/ingest_sec.py /app/ingestion/
+COPY ingestion/market_data.py /app/ingestion/
+COPY ingestion/config.example.json /app/ingestion/
+
+COPY ingestion/bcg-research/bcg_research.json /app/ingestion/bcg-research/
+
+COPY portfolio-engine/ /app/portfolio-engine/
+
+COPY scripts/07-Generate-Financial-Reports.py /app/scripts/
+COPY scripts/10-Analyze-Financial-Reports.py /app/scripts/
+COPY scripts/12-Run-Cloud-Pipeline.py /app/scripts/
+COPY scripts/13-Ingest-Market-Prices.py /app/scripts/
+COPY scripts/14-Analyze-Market-Prices.py /app/scripts/
+COPY scripts/15-Build-Company-Intelligence.py /app/scripts/
+COPY scripts/16-Refresh-Company-Intelligence.py /app/scripts/
+
+RUN mkdir -p \
+    /app/reports/financial \
+    /app/reports/analysis \
+    /app/reports/market-data \
+    /app/reports/market-analysis \
+    /app/reports/company-intelligence
+
+RUN useradd --create-home --uid 10001 cira \
+    && chown -R cira:cira /app
+
+USER cira
+
+# Keep the existing SEC pipeline as the entry point for now.
+CMD ["python", "scripts/12-Run-Cloud-Pipeline.py"]

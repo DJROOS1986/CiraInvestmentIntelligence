@@ -15,7 +15,7 @@ variable "project" {
   type    = string
   default = "cira"
 }
-variable "monthly_budget_eur" {
+variable "monthly_budget_amount" {
   type    = number
   default = 120
 }
