@@ -31,6 +31,7 @@ def prepare(source):
 
     entries = []
     payloads = {}
+    run_ids = set()
 
     for ticker in TICKERS:
         path = (
@@ -57,6 +58,11 @@ def prepare(source):
         if quality.get("investment_recommendation") is not None:
             raise ValueError(f"Recommendation detected: {ticker}")
 
+        run_id = report.get("run_id")
+        if not isinstance(run_id, str) or not run_id.strip():
+            raise ValueError(f"Missing or invalid run_id: {ticker}")
+        run_ids.add(run_id)
+
         blob = (
             f"{PREFIX}/{batch_id}/company-intelligence/"
             f"{ticker}-company-intelligence.json"
@@ -71,7 +77,11 @@ def prepare(source):
 
         payloads[blob] = data
 
+    if len(run_ids) != 1:
+        raise ValueError("Mixed processing run IDs detected")
+
     manifest = {
+        "run_id": next(iter(run_ids)),
         "schema_version": "1.0",
         "batch_id": batch_id,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),

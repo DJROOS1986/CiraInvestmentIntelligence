@@ -22,6 +22,8 @@ def read_json(path):
 
 
 def main():
+    from uuid import uuid4
+    run_id = uuid4().hex
     bcg = load_module(
         "cira_bcg",
         ROOT / "portfolio-engine" / "bcg_integration.py",
@@ -62,7 +64,7 @@ def main():
         assessment = bcg.integrate_bcg(ticker, database)
 
         report = engine.build_company_intelligence(
-            ticker, financial, prices, market, assessment
+            ticker, financial, prices, market, assessment, run_id=run_id
         )
 
         pending.append((destination, report))

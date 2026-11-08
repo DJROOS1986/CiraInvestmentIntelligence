@@ -21,6 +21,7 @@ def sha256_file(path):
 
 def build_manifest(source, batch_id):
     reports = []
+    run_ids = set()
 
     for ticker in TICKERS:
         relative = (
@@ -56,6 +57,11 @@ def build_manifest(source, batch_id):
                 f"Unexpected investment recommendation: {ticker}"
             )
 
+        run_id = document.get("run_id")
+        if not isinstance(run_id, str) or not run_id.strip():
+            raise ValueError(f"Missing or invalid run_id: {ticker}")
+        run_ids.add(run_id)
+
         blob_path = (
             f"financial-intelligence/batches/{batch_id}/"
             f"company-intelligence/"
@@ -69,7 +75,11 @@ def build_manifest(source, batch_id):
             "size_bytes": path.stat().st_size,
         })
 
+    if len(run_ids) != 1:
+        raise ValueError("Mixed processing run IDs detected")
+
     return {
+        "run_id": next(iter(run_ids)),
         "schema_version": "1.0",
         "batch_id": batch_id,
         "created_at_utc": datetime.now(timezone.utc).isoformat(),
