@@ -9,6 +9,11 @@ variable "cira_sec_user_agent" {
   }
 }
 
+variable "cira_pipeline_image_tag" {
+  type    = string
+  default = "research-20261109"
+}
+
 resource "azurerm_container_app_job" "cira" {
   workload_profile_name        = "Consumption"
   name                         = "caj-cira-dev"
@@ -39,7 +44,7 @@ resource "azurerm_container_app_job" "cira" {
   template {
     container {
       name   = "cira-financial-intelligence"
-      image  = "${azurerm_container_registry.cira.login_server}/cira-financial-intelligence:v2"
+      image  = "${azurerm_container_registry.cira.login_server}/cira-financial-intelligence:${var.cira_pipeline_image_tag}"
       cpu    = 0.5
       memory = "1Gi"
 

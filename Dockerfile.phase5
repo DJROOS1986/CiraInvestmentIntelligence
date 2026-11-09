@@ -26,6 +26,7 @@ COPY scripts/13-Ingest-Market-Prices.py /app/scripts/
 COPY scripts/14-Analyze-Market-Prices.py /app/scripts/
 COPY scripts/15-Build-Company-Intelligence.py /app/scripts/
 COPY scripts/16-Refresh-Company-Intelligence.py /app/scripts/
+COPY scripts/20-Publish-Versioned-Reports.py /app/scripts/
 
 RUN mkdir -p \
     /app/reports/financial \
@@ -39,5 +40,5 @@ RUN useradd --create-home --uid 10001 cira \
 
 USER cira
 
-# Keep the existing SEC pipeline as the entry point for now.
+# SEC, market analytics, company intelligence, and immutable report publication.
 CMD ["python", "scripts/12-Run-Cloud-Pipeline.py"]

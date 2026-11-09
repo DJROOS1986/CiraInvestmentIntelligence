@@ -85,3 +85,7 @@ __pycache__/
 
 # Local logs
 *.log
+.phase55-backups/
+.phase55-staging/
+.phase55-promotion.lock
+.phase55-promotion-journal.json

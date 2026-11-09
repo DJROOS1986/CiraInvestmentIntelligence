@@ -1,0 +1,13 @@
+FROM python:3.12-slim
+ENV PYTHONDONTWRITEBYTECODE=1 PYTHONUNBUFFERED=1
+WORKDIR /app
+COPY ingestion/requirements.txt /app/ingestion/requirements.txt
+COPY dashboard/requirements.txt /app/dashboard/requirements.txt
+RUN pip install --no-cache-dir -r /app/dashboard/requirements.txt
+COPY dashboard/ /app/dashboard/
+COPY agents/research.py /app/agents/research.py
+COPY portfolio-engine/portfolio_analytics.py /app/portfolio-engine/portfolio_analytics.py
+RUN useradd --create-home --uid 10001 cira && chown -R cira:cira /app
+USER cira
+EXPOSE 8501
+CMD ["python", "-m", "streamlit", "run", "dashboard/app.py", "--server.address=0.0.0.0", "--server.port=8501", "--server.headless=true", "--browser.gatherUsageStats=false"]

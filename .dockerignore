@@ -9,10 +9,19 @@ __pycache__
 reports/
 audit-reports/
 tests/
-dashboard/
-agents/
 infrastructure/
 *.log
 
 ingestion/config.json
+.tools/
+.codex/
+.agents/
+.aws/
+.env*
+monitoring/
+cira_phase*/
+docs/
+*.backup*
+*.bak*
+*.zip
 

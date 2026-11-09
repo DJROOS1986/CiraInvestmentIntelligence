@@ -2,7 +2,7 @@
 
 Default: local dry-run, no network operations.
 Live mode: requires --publish and --confirm-live-publish.
-Not yet approved for unattended production use.
+Cloud pipeline publishes validated immutable batches with a final latest pointer.
 """
 
 import argparse
@@ -10,7 +10,7 @@ import hashlib
 import json
 import os
 import uuid
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 from pathlib import Path
 
 
@@ -90,6 +90,45 @@ def prepare(source):
         "reports": entries,
     }
 
+    artifacts = []
+    documents = {}
+    for folder, suffix in (('financial', 'financial-report'),
+                           ('market-data', 'daily-prices'),
+                           ('market-analysis', 'market-analysis')):
+        for ticker in TICKERS:
+            path = source / 'reports' / folder / f'{ticker}-{suffix}.json'
+            if not path.is_file():
+                raise FileNotFoundError(f'Missing batch artifact: {path}')
+            data = path.read_bytes()
+            document = json.loads(data)
+            if document.get('ticker', document.get('symbol')) != ticker:
+                raise ValueError(f'Artifact ticker mismatch: {path.name}')
+            relative = path.relative_to(source / 'reports').as_posix()
+            documents[relative] = document
+            blob = f'{PREFIX}/{batch_id}/{relative}'
+            payloads[blob] = data
+            artifacts.append({'path': relative, 'blob_path': blob,
+                              'sha256': digest(data), 'size_bytes': len(data)})
+    manifest['artifacts'] = artifacts
+    now = datetime.now(timezone.utc)
+    for entry in entries:
+        ticker = entry['ticker']
+        report = json.loads(payloads[entry['blob_path']])
+        generated = datetime.fromisoformat(report['generated_at_utc'].replace('Z', '+00:00'))
+        if generated.tzinfo is None or not 0 <= (now - generated).total_seconds() <= 36 * 3600:
+            raise ValueError(f'Stale or invalid company report: {ticker}')
+        prices = documents[f'market-data/{ticker}-daily-prices.json']
+        dates = [date.fromisoformat(row['date']) for row in prices['records']]
+        if len(dates) < 2 or dates != sorted(set(dates)):
+            raise ValueError(f'Invalid price history dates: {ticker}')
+        if not 0 <= (now.date() - dates[-1]).days <= 4:
+            raise ValueError(f'Stale market observations: {ticker}')
+        if report['market']['last_date'] != dates[-1].isoformat():
+            raise ValueError(f'Mixed market snapshots: {ticker}')
+        retrieved = datetime.fromisoformat(prices['retrieved_at_utc'].replace('Z', '+00:00'))
+        if retrieved.tzinfo is None or not 0 <= (now - retrieved).total_seconds() <= 36 * 3600:
+            raise ValueError(f'Stale market retrieval: {ticker}')
+
     manifest_path = f"{PREFIX}/{batch_id}/manifest.json"
 
     return manifest, manifest_path, payloads
@@ -120,7 +159,7 @@ def upload_and_verify(container, blob_name, data):
         )
 
 
-def publish(manifest, manifest_path, payloads):
+def publish(manifest, manifest_path, payloads, container=None):
     from azure.identity import DefaultAzureCredential
     from azure.storage.blob import (
         BlobServiceClient,
@@ -135,15 +174,29 @@ def publish(manifest, manifest_path, payloads):
     if not account:
         raise ValueError("CIRA_STORAGE_ACCOUNT is required")
 
-    credential = DefaultAzureCredential()
+    credential = None
 
     try:
-        service = BlobServiceClient(
-            account_url=f"https://{account}.blob.core.windows.net",
-            credential=credential,
-        )
+        if container is None:
+            credential = DefaultAzureCredential()
+            service = BlobServiceClient(
+                account_url=f"https://{account}.blob.core.windows.net",
+                credential=credential,
+            )
+            container = service.get_container_client(container_name)
 
-        container = service.get_container_client(container_name)
+        from azure.core import MatchConditions
+        from azure.core.exceptions import ResourceNotFoundError
+        pointer = container.get_blob_client('financial-intelligence/latest.json')
+        etag = None
+        try:
+            current = pointer.download_blob()
+            etag = current.properties.etag
+            previous = json.loads(current.readall())
+            if previous['created_at_utc'] >= manifest['created_at_utc']:
+                raise ValueError('A newer batch is already current')
+        except ResourceNotFoundError:
+            pass
 
         for blob_name, data in payloads.items():
             upload_and_verify(container, blob_name, data)
@@ -159,8 +212,22 @@ def publish(manifest, manifest_path, payloads):
 
         print(f"COMMITTED: {manifest_path}")
 
+        pointer_data = json.dumps({
+            'schema_version': '1.0', 'batch_id': manifest['batch_id'],
+            'created_at_utc': manifest['created_at_utc'],
+            'manifest_path': manifest_path, 'manifest_sha256': digest(manifest_data),
+        }).encode('utf-8')
+        options = {'overwrite': False}
+        if etag:
+            options = {'overwrite': True, 'etag': etag,
+                       'match_condition': MatchConditions.IfNotModified}
+        pointer.upload_blob(pointer_data, content_settings=ContentSettings(
+            content_type='application/json'), **options)
+        print('CURRENT: financial-intelligence/latest.json')
+
     finally:
-        credential.close()
+        if credential is not None:
+            credential.close()
 
 
 def main():

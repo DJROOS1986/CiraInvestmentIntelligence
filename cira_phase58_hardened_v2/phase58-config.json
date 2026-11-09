@@ -1,0 +1,13 @@
+{
+    "phase":  "5.8",
+    "enabled":  true,
+    "frequency":  "daily",
+    "local_time":  "09:00",
+    "operation":  "collect",
+    "timeout_seconds":  120,
+    "log_retention_days":  30,
+    "run_if_missed":  false,
+    "allow_overlapping_runs":  false,
+    "allow_azure_operations":  false,
+    "allow_promotion_recovery":  false
+}

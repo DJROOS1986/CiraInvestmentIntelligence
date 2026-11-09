@@ -26,8 +26,10 @@ def read_json(path):
 
 
 def build_reports():
+    from datetime import datetime, timezone
     from uuid import uuid4
     run_id = uuid4().hex
+    generated_at = datetime.now(timezone.utc).isoformat()
     bcg = load_module(
         "cira_bcg_refresh",
         ROOT / "portfolio-engine" / "bcg_integration.py",
@@ -62,6 +64,7 @@ def build_reports():
         reports[ticker] = engine.build_company_intelligence(
             ticker, financial, prices, market, assessment, run_id=run_id
         )
+        reports[ticker]['generated_at_utc'] = generated_at
 
     return reports
 

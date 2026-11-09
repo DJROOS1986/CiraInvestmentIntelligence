@@ -50,6 +50,14 @@ def upload_file(container, path, blob_name):
     print(f"UPLOADED: {container.container_name}/{blob_name}")
 
 
+def run_stage(filename):
+    try:
+        runpy.run_path(str(ROOT / 'scripts' / filename), run_name='__main__')
+    except SystemExit as exc:
+        if exc.code not in (None, 0):
+            raise RuntimeError(f'Pipeline stage failed: {filename}') from exc
+
+
 def main():
     ingestion = load_ingestion()
     if os.getenv("CIRA_SEC_USER_AGENT"):
@@ -159,6 +167,18 @@ def main():
             path,
             f"financial-intelligence/{relative}",
         )
+
+    # Publish a complete immutable research batch only after every stage succeeds.
+    # Legacy financial outputs above remain available if the market provider fails.
+    for stage in ('13-Ingest-Market-Prices.py', '14-Analyze-Market-Prices.py',
+                  '16-Refresh-Company-Intelligence.py'):
+        run_stage(stage)
+    publisher_spec = importlib.util.spec_from_file_location(
+        'cira_publisher', ROOT / 'scripts' / '20-Publish-Versioned-Reports.py')
+    publisher = importlib.util.module_from_spec(publisher_spec)
+    publisher_spec.loader.exec_module(publisher)
+    manifest, manifest_path, payloads = publisher.prepare(ROOT)
+    publisher.publish(manifest, manifest_path, payloads, container=reports_container)
 
     print("CIRA CLOUD PIPELINE: SUCCESS")
     return 0

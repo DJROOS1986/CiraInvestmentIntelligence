@@ -1,0 +1,55 @@
+{
+  "checks": [
+    {
+      "message": "Hash verified",
+      "name": "26-CIRA-Safe-Promotion.py",
+      "status": "PASS"
+    },
+    {
+      "message": "Hash verified",
+      "name": "28-CIRA-Recovery-Candidate.py",
+      "status": "PASS"
+    },
+    {
+      "message": "Hash verified",
+      "name": "29-CIRA-Promotion-Recovery.py",
+      "status": "PASS"
+    },
+    {
+      "message": "Hash verified",
+      "name": "acceptance_record",
+      "status": "PASS"
+    },
+    {
+      "message": "Present",
+      "name": "AAPL_report",
+      "status": "PASS"
+    },
+    {
+      "message": "Present",
+      "name": "MSFT_report",
+      "status": "PASS"
+    },
+    {
+      "message": "No journal present",
+      "name": "promotion_journal",
+      "status": "PASS"
+    },
+    {
+      "message": "No lock present",
+      "name": "promotion_lock",
+      "status": "PASS"
+    },
+    {
+      "message": "No recovery indicators detected",
+      "name": "recovery_advisory",
+      "status": "PASS"
+    }
+  ],
+  "journal_status": "absent",
+  "mode": "read_only",
+  "overall_status": "PASS",
+  "phase": "5.6",
+  "recovery_authorized": false,
+  "timestamp_utc": "2026-11-09T21:45:18.525808+00:00"
+}

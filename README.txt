@@ -1,0 +1,1 @@
+CIRA Phase 5 BCG research dataset. Source: user-supplied bcg_matrix_database.xlsx, Matrix sheet, 143 rows. Run python inspect_bcg.py locally. Research classifications and scores are not buy/sell signals. HTML file says 127 companies; reconciliation pending. No API keys or cloud changes.
