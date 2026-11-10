@@ -86,6 +86,26 @@ resource "azurerm_container_app" "dashboard" {
         secret_name = "dashboard-access-key"
       }
       env {
+        name  = "STREAMLIT_THEME_BASE"
+        value = "dark"
+      }
+      env {
+        name  = "STREAMLIT_THEME_PRIMARY_COLOR"
+        value = "#5eead4"
+      }
+      env {
+        name  = "STREAMLIT_THEME_BACKGROUND_COLOR"
+        value = "#0b1422"
+      }
+      env {
+        name  = "STREAMLIT_THEME_SECONDARY_BACKGROUND_COLOR"
+        value = "#111f30"
+      }
+      env {
+        name  = "STREAMLIT_THEME_TEXT_COLOR"
+        value = "#e5eaf2"
+      }
+      env {
         name  = "CIRA_AI_ENDPOINT"
         value = azurerm_cognitive_account.research.endpoint
       }
