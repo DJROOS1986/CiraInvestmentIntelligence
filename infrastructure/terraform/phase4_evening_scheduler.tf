@@ -22,7 +22,8 @@ resource "azurerm_logic_app_trigger_recurrence" "cira_evening" {
   time_zone = "Romance Standard Time"
 
   schedule {
-    at_these_hours   = [21]
+    # 22:30 Copenhagen time = always >= 30 min after the US close (16:00 New York), summer and winter.
+    at_these_hours   = [22]
     at_these_minutes = [30]
   }
 }
