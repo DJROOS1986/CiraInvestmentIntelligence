@@ -1,0 +1,209 @@
+# CIRA Investment Intelligence — Handover
+
+**Last updated:** 10 November 2026, ~23:15 Danish time
+**Supersedes:** handover of 10 November 2026 (morning)
+**Repo:** `C:\Users\45298\CiraInvestmentIntelligence` (Windows, PowerShell 5.1, VS Code, Python `.venv`)
+**HEAD at handover:** `0714903` on `main` (local only, not pushed)
+
+Every statement below is marked by how it is known:
+**[verified]** = checked with a command or test during the session · **[inferred]** = strong evidence, not directly proven · **[open]** = not yet checked
+
+---
+
+## 1. Rules for any AI assistant working on CIRA
+
+1. **Inspect before modifying.** The Git repo is the source of truth; this document is context, not a substitute for reading current files.
+2. One step (or one small coherent set of commands) at a time. Wait for the real output before continuing.
+3. **All Terraform changes go through `infrastructure/terraform/Invoke-CIRA-Terraform.ps1`.** Run it without switches to plan; with `-Apply` to apply after typing `APPLY`. Never run `terraform apply` directly.
+4. **Never change Terraform-managed resources with `az ... update`.** That is how the theme drift happened (section 9). Change the `.tf` file instead.
+5. Never deploy, delete Azure resources, rotate credentials, commit or push without explicit approval. State-changing scripts use typed confirmations (`APPLY`, `IMPORT`, `ARCHIVE`, `REMOVE`) — case-sensitive by design.
+6. No `else` in new PowerShell. Use guard clauses and independent conditions.
+7. Do not modify working financial calculations without a demonstrated, tested defect.
+8. Never expose the dashboard access key, tokens, credentials or personal data in logs or chat.
+9. A successful Azure job is not proof of financial correctness.
+10. Never invent function names, Terraform arguments, API endpoints or CLI flags. If unsure, say so and validate (`terraform validate`, `--help`).
+11. Do not create backup copies, `-v2`, `(1)`, `.candidate`, or phase folders in the repo root. Archive outside the repo (`..\CiraInvestmentIntelligence_archive\`).
+
+### PowerShell 5.1 pitfalls seen in this project
+- Native commands (`az`, `git`) lose embedded double quotes inside single-quoted arguments. Use double-quoted strings with single quotes inside, or avoid inner quotes.
+- `$ErrorActionPreference = 'Stop'` + `2>&1` on a native command turns the first stderr line into a terminating error. Use `cmd /c "... 2>&1"` instead.
+- `git diff` opens a pager; use `git --no-pager ...`. Pressing `s` in the pager saves to a file.
+- Scripts must be run as files (`.\path\script.ps1`), not pasted — `$PSScriptRoot` is empty when pasted.
+- Files downloaded by the browser land in the **repo root**; move them, then `Unblock-File`.
+
+---
+
+## 2. Purpose and safeguards (unchanged)
+
+Personal, research-only investment intelligence for one long-term investor (USD 10–50k, no leverage).
+No trading, no broker orders, no buy/sell recommendations. AI explains; deterministic code calculates.
+Saxo is the intended read-only portfolio source of record (not yet integrated).
+
+---
+
+## 3. Current status
+
+| Area | Status |
+|---|---|
+| Terraform state vs Azure | **In sync** — plan shows no changes [verified] |
+| Terraform state lock | Released (stale lock from interrupted apply on 9 Nov) [verified] |
+| Research pipeline (Container Apps Job) | Running twice daily, all executions succeeded [verified] |
+| Failure alerting | **Live**: 2 log alert rules, enabled [verified]; test email **[open]** |
+| AI model deployment | **Live**, smoke-tested with Entra ID auth [verified] |
+| Dashboard | AI image + dark theme, healthy, latest batch loads [verified]; AI feature in UI **[open]** |
+| Evening price timing | Was intraday; schedule moved to 22:30 [verified]; proof pending **[open]** |
+| Repo root | Cleaned; tests 25/25 OK [verified] |
+| Saxo integration | Not started |
+| Production market data | Prototype only (Yahoo chart endpoint, unadjusted) |
+
+---
+
+## 4. Azure resources (`rg-cira-dev`, North Europe)
+
+| Resource | Name | Managed by |
+|---|---|---|
+| Key Vault | `kv-cira-dev-a2pjnb` | Terraform |
+| Storage / container | `stciradeva2pjnb` / `reports` (+ `raw-filings`) | Terraform |
+| Log Analytics | `law-cira-dev` | Terraform |
+| Container Registry | `acrciradeva2pjnb` | Terraform |
+| Container Apps environment | `cae-cira-dev` | Terraform |
+| Research job | `caj-cira-dev` | Terraform |
+| Logic Apps | `logic-cira-daily-dev`, `logic-cira-evening-dev` | Terraform |
+| Dashboard | `ca-cira-dashboard-dev` | Terraform |
+| AI account | `ai-cira-dev-a2pjnb` (imported into state 10 Nov) | Terraform |
+| AI deployment | `cira-research` | Terraform |
+| Alert rules | `alert-cira-pipeline-failed-dev`, `alert-cira-pipeline-silent-dev` | Terraform |
+| Action group | `ag-cira-failures-dev` (1 email receiver) | **Outside Terraform** — referenced as data source only |
+| Budget | `budget-cira-dev` | Terraform |
+
+---
+
+## 5. Terraform
+
+- Binary: `.tools/terraform-1.13.5/terraform.exe` (pinned). Provider `azurerm` **4.81.0** (`~> 4.0`) [verified].
+- Remote state: `backend "azurerm"` with local `backend.hcl` (untracked); state blob `tfstate/cira/dev.tfstate` [verified].
+- Variables: `environments/dev.tfvars` (contains `subscription_id`) and `phase3.dev.auto.tfvars`, both untracked. Neither overrides image tags [verified].
+- Required env var: `TF_VAR_cira_sec_user_agent`, read from `ingestion/config.json` (the scripts set it automatically).
+- **The state contains the dashboard access key in plain text** (`random_password.dashboard_access`). Treat state storage access as secret access.
+- Scripts in `infrastructure/terraform/`:
+  - `Invoke-CIRA-Terraform.ps1` — standard plan/apply gate. Plans to a temp file (deleted afterwards), lists changes, **blocks any delete/replace**, applies only after `APPLY`.
+  - `Reconcile-CIRA-Drift.ps1` — one-off used on 10 Nov (theme blocks + AI import). Idempotent; safe to keep as reference.
+  - `Complete-CIRA-Phase4.ps1` — original Phase 4 activation script; `scripts/Complete-CIRA-Phase4.ps1` is a wrapper that calls it.
+
+---
+
+## 6. Research pipeline
+
+- Job image: `cira-financial-intelligence:research-20261109` [verified]. Built from **`Dockerfile.phase5`** [inferred — plain `Dockerfile` lacks the market/publish stages]. **The build command is not recorded in the repo** [verified gap].
+- Entry point: `scripts/12-Run-Cloud-Pipeline.py` (image CMD; job has no command override) [verified].
+- Behaviour [verified by code reading]:
+  - Any stage failure → `CIRA CLOUD PIPELINE FAILED: …` on stderr, exit code 1.
+  - A complete versioned batch is published **only** after all stages succeed; then `CIRA CLOUD PIPELINE: SUCCESS` on stdout.
+  - Stages 07 and 10 run via `runpy` **without** the `run_stage` wrapper (an early `sys.exit(0)` there would end the run "successfully" without publishing; the silent alert would catch it).
+  - Expected reports for AAPL and MSFT are **hard-coded** (lines ~151–156). Must change when the universe grows.
+- Console logs reach Log Analytics table `ContainerAppConsoleLogs_CL` (columns `Log_s`, `ContainerJobName_s`, `Stream_s`, `ContainerImage_s`) [verified].
+
+### Schedules (time zone `Romance Standard Time` = Copenhagen, follows DST)
+
+| Logic App | Trigger name | Actual time |
+|---|---|---|
+| `logic-cira-daily-dev` | `EveryDayAt0700` (misleading name) | **09:00** |
+| `logic-cira-evening-dev` | `EveryDayAt2130` (misleading name) | **22:30** (changed 10 Nov) |
+
+Do not rename the triggers: renaming would recreate them, and the gated script blocks replacements.
+The Logic Apps only start the job; they do not check its outcome. Failure detection is done by the alert rules.
+
+---
+
+## 7. Monitoring and alerts
+
+| Rule | Condition | Frequency / window | Severity |
+|---|---|---|---|
+| `alert-cira-pipeline-failed-dev` | `CIRA CLOUD PIPELINE FAILED` logged by `caj-cira-dev` | 15 min / 30 min | 1 |
+| `alert-cira-pipeline-silent-dev` | no `CIRA CLOUD PIPELINE: SUCCESS` in last **15 h** | 1 h / 1 day (15 h filter in query) | 2 |
+
+Both send to `ag-cira-failures-dev`. Both are stateful (auto-resolve). Defined in `infrastructure/terraform/monitoring_alerts.tf`.
+Longest normal gap between successful runs is 13.5 h (09:00 → 22:30), so 15 h leaves margin.
+
+**[open]** Send a test notification: Portal → Monitor → Alerts → Action groups → `ag-cira-failures-dev` → Test action group. Check spam folder.
+**[open]** A separate local monitoring setup exists (`scripts/29`–`34`, `monitoring/history/*.json`). Its relationship to the Azure alerts has not been reviewed.
+
+---
+
+## 8. AI
+
+- Account `ai-cira-dev-a2pjnb`, kind OpenAI, S0, `local_auth_enabled = false` (Entra ID only), public network access enabled [verified].
+- Deployment `cira-research`: `gpt-5.4-mini` version `2026-03-17`, SKU `GlobalStandard`, capacity 1, auto-upgrade `OnceNewDefaultVersionAvailable` [verified]. Consider pinning the version for reproducible research.
+- Role `Cognitive Services OpenAI User` for the dashboard identity and the developer [verified].
+- Smoke test passed via `https://ai-cira-dev-a2pjnb.openai.azure.com/openai/v1/chat/completions` with an Entra token (21 tokens) [verified].
+- AI must explain verified facts only; it must not produce figures or recommendations.
+
+---
+
+## 9. Dashboard
+
+- Image `cira-dashboard:dashboard-ai-20261109`, revision `ca-cira-dashboard-dev--0000002`, running and ready, health `200 ok` [verified].
+- 11 env vars in this order: `AZURE_CLIENT_ID`, `CIRA_STORAGE_ACCOUNT`, `CIRA_REPORTS_CONTAINER`, `CIRA_DASHBOARD_ACCESS_KEY` (secret ref), 5 × `STREAMLIT_THEME_*`, `CIRA_AI_ENDPOINT`, `CIRA_AI_DEPLOYMENT` [verified].
+- **Env blocks are a positional list in Terraform.** Inserting in the middle shows as renames in the plan; append or keep the order.
+- Theme is now defined in `dashboard.tf` (previously only set via CLI, which a Terraform apply would have removed).
+- Rollback image if the AI build misbehaves: apply with `-var=cira_dashboard_image_tag=dashboard-20261109`.
+- Access protection is an application-level key, not Entra ID sign-in. Move to Entra before any Saxo data is shown.
+- URL: `https://ca-cira-dashboard-dev.thankfulocean-daf96fc5.northeurope.azurecontainerapps.io`
+
+---
+
+## 10. Data quality
+
+- **Intraday capture:** the old 21:30 run started 30 min before the US close (both summer and winter), so evening "latest close" values were intraday [verified for batch `20261110T203058Z-02f7eff8743e` by timing]. Schedule moved to 22:30, which is ≥30 min after the US close all year [verified in Azure].
+- **[open] Proof:** after 09:15 on 11 Nov run
+  `python scripts/35-Check-Price-Consistency.py`
+  Check 2 will show whether the 10 Nov close changed between the evening and the morning batch. From 12 Nov onwards check 1 should report no intraday batches.
+- Market data is still the Yahoo chart endpoint (prototype, unadjusted prices). Not a verified production source.
+- MSFT figures were reconciled against SEC Company Facts in an earlier session; AAPL figures have not been independently reconciled against the SEC filing.
+
+---
+
+## 11. Repository
+
+- Root cleaned on 10 Nov. Removed items are archived outside the repo in `C:\Users\45298\CiraInvestmentIntelligence_archive\` (timestamped folders, with `manifest.csv` where applicable) and remain in Git history.
+- Deliberately kept: `cira_phase58_hardened_v2/` (used by `scripts/33-…` and `tests/test_phase58_process.py`); ignored folders `.phase55-backups`, `.phase55-staging`, `audit-reports`.
+- New scripts:
+  - `scripts/35-Check-Price-Consistency.py` — read-only intraday/consistency check across all batches.
+  - `scripts/36-Archive-Root-Leftovers.ps1` — report/archive/restore for root leftovers.
+- **Tests:** run with
+  `cmd /c "python -m unittest discover -s tests 2>&1"`
+  (not `-t .` — `tests/` has no `__init__.py`). Result on 10 Nov: **25/25 OK** [verified].
+- Line-ending warnings (LF → CRLF) on every add are harmless; a `.gitattributes` would silence them.
+
+### Commits on 10 Nov (local, not pushed)
+`b59cc56` reconcile drift · `f05640d` alerts + Terraform gate script · `98144e0` evening run 22:30 · `0de5dda` silent alert 15 h + price check · `e496a63` root cleanup + renumber · `59132b4` duplicate copies + phase58 drafts · `0714903` orphan Phase 4 script + stray recovery candidate
+
+---
+
+## 12. Backlog (priority order)
+
+1. **[open]** Run `scripts/35-Check-Price-Consistency.py` after 09:15 on 11 Nov; again after 13 Nov to confirm no intraday batches.
+2. **[open]** Send the action-group test email.
+3. **[open]** Check the AI feature in the dashboard UI.
+4. Review local monitoring (`scripts/29`–`34`, `monitoring/history/`) versus the Azure alerts; remove duplication.
+5. Record the image builds in the repo (script with `az acr build -f Dockerfile.phase5 …` and tag convention).
+6. Wrap pipeline stages 07 and 10 in `run_stage`.
+7. Replace the hard-coded AAPL/MSFT expected-file list before expanding the universe.
+8. Python 3.10 → 3.12 in both Dockerfiles (3.10 is believed to have reached end of life in Oct 2026 — verify on python.org).
+9. Decide whether to push to a remote for backup.
+10. Later: Entra ID sign-in for the dashboard, licensed market data, Saxo read-only integration, AAPL SEC reconciliation.
+
+---
+
+## 13. How the next session should start
+
+```powershell
+git --no-pager status --short          # expect empty
+git --no-pager log --oneline -8        # expect 0714903 at the top (or newer)
+.\infrastructure\terraform\Invoke-CIRA-Terraform.ps1   # expect "No changes. Azure matches the code."
+python scripts/35-Check-Price-Consistency.py           # data-quality status
+```
+
+If the Terraform check shows changes nobody intended, stop and investigate drift before doing anything else.
+
+**Operating principle:** preserve what works, verify what is uncertain, change only what is necessary, test each change before continuing.
