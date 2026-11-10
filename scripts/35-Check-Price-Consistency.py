@@ -9,8 +9,8 @@
 Changes nothing: it only lists and downloads blobs.
 
 Usage (repo root, .venv active, signed in with `az login`):
-    python scripts/30-Check-Price-Consistency.py
-    python scripts/30-Check-Price-Consistency.py --account stciradeva2pjnb --container reports
+    python scripts/35-Check-Price-Consistency.py
+    python scripts/35-Check-Price-Consistency.py --account stciradeva2pjnb --container reports
 
 Exit codes: 0 = consistent, 1 = intraday risk or differences found, 2 = data not in expected shape.
 Limitation: US early-close days (e.g. day after Thanksgiving) are not modelled.
