@@ -54,13 +54,13 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "cira_pipeline_failed"
   tags = local.common_tags
 }
 
-# Safety net: no complete batch published for 14 hours.
+# Safety net: no complete batch published for 15 hours.
 # Catches failed runs, crashes before logging, Logic Apps not firing and early exits.
 # Azure only allows fixed window sizes, so the window is 1 day and the 14-hour limit is in the query.
 resource "azurerm_monitor_scheduled_query_rules_alert_v2" "cira_pipeline_silent" {
   name                    = "alert-cira-pipeline-silent-${var.environment}"
-  display_name            = "CIRA pipeline silent for 14h (${var.environment})"
-  description             = "No CIRA CLOUD PIPELINE: SUCCESS in the last 14 hours. The dashboard is serving an ageing batch."
+  display_name            = "CIRA pipeline silent for 15h (${var.environment})"
+  description             = "No CIRA CLOUD PIPELINE: SUCCESS in the last 15 hours. The dashboard is serving an ageing batch."
   resource_group_name     = azurerm_resource_group.main.name
   location                = data.azurerm_log_analytics_workspace.cira.location
   scopes                  = [data.azurerm_log_analytics_workspace.cira.id]
@@ -73,7 +73,7 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "cira_pipeline_silent"
   criteria {
     query                   = <<-KQL
       ContainerAppConsoleLogs_CL
-      | where TimeGenerated > ago(14h)
+      | where TimeGenerated > ago(15h)
       | where ContainerJobName_s == "${azurerm_container_app_job.cira.name}"
       | where Log_s contains "CIRA CLOUD PIPELINE: SUCCESS"
     KQL
