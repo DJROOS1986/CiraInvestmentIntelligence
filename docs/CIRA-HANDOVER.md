@@ -126,7 +126,7 @@ Both send to `ag-cira-failures-dev`. Both are stateful (auto-resolve). Defined i
 Longest normal gap between successful runs is 13.5 h (09:00 → 22:30), so 15 h leaves margin.
 
 **[open]** Send a test notification: Portal → Monitor → Alerts → Action groups → `ag-cira-failures-dev` → Test action group. Check spam folder.
-**[open]** A separate local monitoring setup exists (`scripts/29`–`34`, `monitoring/history/*.json`). Its relationship to the Azure alerts has not been reviewed.
+**Decided 10 Nov:** Scheduled Task `CIRA-Daily-Monitoring` (runs `cira_phase58_hardened_v2/Invoke-CIRA-Phase58.ps1 -Run`) is **disabled**: it failed to start (0x800710E0), depended on the laptop, wrote into tracked `monitoring/history/`, and the wrapper itself states `-Run` is manual-only. Azure alerts are the primary detection; scripts 29-34 remain on-demand tools. `CIRA-Daily-Investment-Intelligence` (old local pipeline `scripts/11-Run-All.ps1`) stays disabled. Task XML backups are in the archive folder; undo with `Enable-ScheduledTask -TaskName CIRA-Daily-Monitoring`.
 
 ---
 
@@ -185,7 +185,7 @@ Longest normal gap between successful runs is 13.5 h (09:00 → 22:30), so 15 h 
 1. **[open]** Run `scripts/35-Check-Price-Consistency.py` after 09:15 on 11 Nov; again after 13 Nov to confirm no intraday batches.
 2. **[open]** Send the action-group test email.
 3. **[open]** Check the AI feature in the dashboard UI.
-4. Review local monitoring (`scripts/29`–`34`, `monitoring/history/`) versus the Azure alerts; remove duplication.
+4. Done 10 Nov: local monitoring reviewed; daily Scheduled Task disabled (see section 7); scripts 29-34 kept as on-demand tools.
 5. Record the image builds in the repo (script with `az acr build -f Dockerfile.phase5 …` and tag convention).
 6. Wrap pipeline stages 07 and 10 in `run_stage`.
 7. Replace the hard-coded AAPL/MSFT expected-file list before expanding the universe.
