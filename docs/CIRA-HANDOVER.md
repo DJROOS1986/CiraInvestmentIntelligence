@@ -94,7 +94,7 @@ Saxo is the intended read-only portfolio source of record (not yet integrated).
 
 ## 6. Research pipeline
 
-- Job image: `cira-financial-intelligence:research-20261109` [verified]. Built from **`Dockerfile.phase5`** [inferred — plain `Dockerfile` lacks the market/publish stages]. **The build command is not recorded in the repo** [verified gap].
+- Job image: `cira-financial-intelligence:research-20261110-724e313` [verified], built from **`Dockerfile.phase5`** at commit `724e313` with `scripts/37-Build-CIRA-Image.ps1`; test run succeeded 10 Nov 22:34 UTC [verified]. Every build is recorded in `docs/IMAGE-BUILDS.md`.
 - Entry point: `scripts/12-Run-Cloud-Pipeline.py` (image CMD; job has no command override) [verified].
 - Behaviour [verified by code reading]:
   - Any stage failure → `CIRA CLOUD PIPELINE FAILED: …` on stderr, exit code 1.
@@ -155,9 +155,7 @@ Longest normal gap between successful runs is 13.5 h (09:00 → 22:30), so 15 h 
 ## 10. Data quality
 
 - **Intraday capture:** the old 21:30 run started 30 min before the US close (both summer and winter), so evening "latest close" values were intraday [verified for batch `20261110T203058Z-02f7eff8743e` by timing]. Schedule moved to 22:30, which is ≥30 min after the US close all year [verified in Azure].
-- **[open] Proof:** after 09:15 on 11 Nov run
-  `python scripts/35-Check-Price-Consistency.py`
-  Check 2 will show whether the 10 Nov close changed between the evening and the morning batch. From 12 Nov onwards check 1 should report no intraday batches.
+- **Proven 10 Nov [verified]:** same-date closes differed between the 20:30 UTC batch and a post-close batch (AAPL 348.71 vs 348.51, MSFT 533.243 vs 533.16). Re-run `python scripts/35-Check-Price-Consistency.py` after 12 Nov: check 1 should list no new intraday batches.
 - Market data is still the Yahoo chart endpoint (prototype, unadjusted prices). Not a verified production source.
 - MSFT figures were reconciled against SEC Company Facts in an earlier session; AAPL figures have not been independently reconciled against the SEC filing.
 
@@ -182,11 +180,11 @@ Longest normal gap between successful runs is 13.5 h (09:00 → 22:30), so 15 h 
 
 ## 12. Backlog (priority order)
 
-1. **[open]** Run `scripts/35-Check-Price-Consistency.py` after 09:15 on 11 Nov; again after 13 Nov to confirm no intraday batches.
+1. Intraday capture proven and fixed (10 Nov). Re-run `scripts/35-Check-Price-Consistency.py` after 12 Nov to confirm no new intraday batches.
 2. **[open]** Send the action-group test email.
 3. **[open]** Check the AI feature in the dashboard UI.
 4. Done 10 Nov: local monitoring reviewed; daily Scheduled Task disabled (see section 7); scripts 29-34 kept as on-demand tools.
-5. Record the image builds in the repo (script with `az acr build -f Dockerfile.phase5 …` and tag convention).
+5. Done 10 Nov: builds via `scripts/37-Build-CIRA-Image.ps1`, recorded in `docs/IMAGE-BUILDS.md`. Follow-ups: pin base-image digest and package versions (rebuild pulled newer deps); add `.tools` to `.dockerignore` (159 MiB upload); check the `Dockerfile.phase5` step 21 `mkdir` line (market-data and market-analysis appear joined).
 6. Wrap pipeline stages 07 and 10 in `run_stage`.
 7. Replace the hard-coded AAPL/MSFT expected-file list before expanding the universe.
 8. Python 3.10 → 3.12 in both Dockerfiles (3.10 is believed to have reached end of life in Oct 2026 — verify on python.org).
