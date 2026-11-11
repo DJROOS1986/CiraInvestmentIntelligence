@@ -113,6 +113,10 @@ resource "azurerm_container_app" "dashboard" {
         name  = "CIRA_AI_DEPLOYMENT"
         value = azurerm_cognitive_deployment.research.name
       }
+      env {
+        name  = "CIRA_ALLOWED_PRINCIPAL_ID"
+        value = data.azurerm_client_config.current.object_id
+      }
     }
   }
 

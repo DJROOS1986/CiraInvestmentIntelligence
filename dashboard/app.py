@@ -10,7 +10,8 @@ import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from data import TICKERS, freshness, load_azure, load_local
+from data import TICKERS, freshness, load_azure, load_local
+from access import entra_allowed
 
 st.set_page_config(page_title='CIRA | Research workspace', page_icon='◈', layout='wide')
 st.markdown('''<style>
@@ -46,12 +47,19 @@ st.caption('RESEARCH WORKSPACE / AAPL · MSFT')
 st.title(view)
 st.write('Financial fundamentals, historical market context, and transparent data quality.')
 required_key = os.environ.get('CIRA_DASHBOARD_ACCESS_KEY')
-if required_key:
+try:
+    request_headers = st.context.headers
+except Exception:
+    request_headers = {}
+entra_ok = entra_allowed(request_headers, os.environ.get('CIRA_ALLOWED_PRINCIPAL_ID'))
+if entra_ok:
+    st.sidebar.caption('Signed in with Microsoft Entra ID')
+if required_key and not entra_ok:
     supplied = st.sidebar.text_input('Access key', type='password')
     if not hmac.compare_digest(supplied, required_key):
         st.info('Enter your dashboard access key to open the research workspace.')
         st.stop()
-if os.environ.get('CIRA_STORAGE_ACCOUNT') and not required_key:
+if os.environ.get('CIRA_STORAGE_ACCOUNT') and not required_key and not entra_ok:
     st.error('Dashboard access protection is not configured.')
     st.stop()
 try:
