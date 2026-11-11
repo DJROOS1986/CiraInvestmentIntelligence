@@ -7,6 +7,7 @@ COPY dashboard/requirements.txt /app/dashboard/requirements.txt
 COPY dashboard/constraints-dashboard.txt /app/dashboard/constraints.txt
 RUN pip install --no-cache-dir -c /app/dashboard/constraints.txt -r /app/dashboard/requirements.txt
 COPY dashboard/ /app/dashboard/
+COPY config/universe.json /app/config/universe.json
 COPY agents/research.py /app/agents/research.py
 COPY portfolio-engine/portfolio_analytics.py /app/portfolio-engine/portfolio_analytics.py
 RUN useradd --create-home --uid 10001 cira && chown -R cira:cira /app

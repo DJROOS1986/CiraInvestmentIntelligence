@@ -40,7 +40,7 @@ def main():
     output = ROOT / "reports" / "company-intelligence"
     pending = []
 
-    for ticker in ("AAPL", "MSFT"):
+    for ticker in tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"]):
         destination = output / f"{ticker}-company-intelligence.json"
 
         if destination.exists():

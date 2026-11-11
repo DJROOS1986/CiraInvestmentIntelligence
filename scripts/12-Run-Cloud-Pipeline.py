@@ -68,8 +68,7 @@ def main():
             ),
             "sec_user_agent": os.environ["CIRA_SEC_USER_AGENT"],
             "companies": [
-                {"ticker": "AAPL", "cik": "0000320193"},
-                {"ticker": "MSFT", "cik": "0000789019"},
+                *[{"ticker": c["ticker"], "cik": c["cik"]} for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"]],
             ],
         }
     else:
@@ -149,8 +148,7 @@ def main():
     )
 
     expected = [
-        REPORTS / "financial" / "AAPL-financial-report.json",
-        REPORTS / "financial" / "MSFT-financial-report.json",
+        *[REPORTS / "financial" / f"{t}-financial-report.json" for t in tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"])],
         REPORTS / "analysis" / "company-comparison.json",
         REPORTS / "analysis" / "company-comparison.txt",
     ]

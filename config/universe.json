@@ -1,0 +1,20 @@
+{
+  "schema_version": "1.0",
+  "description": "CIRA research universe. Single source of truth for every pipeline stage and the dashboard. CIKs verified against SEC company_tickers.json and submissions on 11 Nov 2026 (scripts/45-Verify-Universe-Candidates.py).",
+  "companies": [
+    {"ticker": "AAPL", "cik": "0000320193", "sec_name": "Apple Inc.", "bcg_name": "Apple", "bcg_required": false, "annual_form": "10-K", "notes": []},
+    {"ticker": "MSFT", "cik": "0000789019", "sec_name": "MICROSOFT CORP", "bcg_name": "Microsoft", "bcg_required": false, "annual_form": "10-K",
+     "notes": ["Microsoft BCG growth figure refers to Azure segment growth, not independently verified market growth"]},
+    {"ticker": "KLAC", "cik": "0000319201", "sec_name": "KLA CORP", "bcg_name": "KLA Corporation", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "ISRG", "cik": "0001035267", "sec_name": "INTUITIVE SURGICAL INC", "bcg_name": "Intuitive Surgical", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "LRCX", "cik": "0000707549", "sec_name": "LAM RESEARCH CORP", "bcg_name": "Lam Research", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "AVGO", "cik": "0001730168", "sec_name": "Broadcom Inc.", "bcg_name": "Broadcom (custom AI ASIC design)", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "NVDA", "cik": "0001045810", "sec_name": "NVIDIA CORP", "bcg_name": "Nvidia", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "VEEV", "cik": "0001393052", "sec_name": "VEEVA SYSTEMS INC", "bcg_name": "Veeva Systems", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "NOW", "cik": "0001373715", "sec_name": "ServiceNow, Inc.", "bcg_name": "ServiceNow", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "SNPS", "cik": "0000883241", "sec_name": "SYNOPSYS INC", "bcg_name": "Synopsys", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "CDNS", "cik": "0000813672", "sec_name": "CADENCE DESIGN SYSTEMS INC", "bcg_name": "Cadence Design Systems", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "LLY", "cik": "0000059478", "sec_name": "ELI LILLY & Co", "bcg_name": "Eli Lilly", "bcg_required": true, "annual_form": "10-K",
+     "notes": ["Capital expenditure is reported only as PaymentsToAcquireOtherPropertyPlantAndEquipment; excluded until verified against the 10-K cash flow statement, so free cash flow is unavailable"]}
+  ]
+}

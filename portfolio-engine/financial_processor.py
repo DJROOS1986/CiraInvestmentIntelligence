@@ -8,18 +8,63 @@ TAGS = {
         "Revenues",
         "SalesRevenueNet",
     ],
-    "net_income": ["NetIncomeLoss"],
+    "net_income": ["NetIncomeLoss", "ProfitLoss"],
     "total_assets": ["Assets"],
     "total_liabilities": ["Liabilities"],
     "operating_cash_flow": [
         "NetCashProvidedByUsedInOperatingActivities"
     ],
     "capital_expenditure": [
-        "PaymentsToAcquirePropertyPlantAndEquipment"
+        "PaymentsToAcquirePropertyPlantAndEquipment",
+        "PaymentsToAcquireProductiveAssets"
     ],
 }
 
 INSTANT = {"total_assets", "total_liabilities"}
+
+
+DERIVED_TOLERANCE = 0.001
+EQUITY_TAGS = (
+    "StockholdersEquityIncludingPortionAttributableToNoncontrollingInterest",
+    "StockholdersEquity",
+)
+
+
+def _instant_value(facts, tag, period_end):
+    """Latest-filed 10-K balance-sheet value of a tag at period_end, or None."""
+    best = None
+    for item in facts.get(tag, {}).get("units", {}).get("USD", []):
+        if item.get("form") not in ("10-K", "10-K/A") or item.get("val") is None:
+            continue
+        if item.get("end") != period_end or item.get("start") is not None or not item.get("filed"):
+            continue
+        if best is None or (item["filed"], item.get("accn", "")) > (best["filed"], best.get("accn", "")):
+            best = item
+    return best
+
+
+def derive_total_liabilities(facts, period_end):
+    """Current + non-current liabilities, accepted only if it equals total liabilities and equity minus equity."""
+    current = _instant_value(facts, "LiabilitiesCurrent", period_end)
+    noncurrent = _instant_value(facts, "LiabilitiesNoncurrent", period_end)
+    total = _instant_value(facts, "LiabilitiesAndStockholdersEquity", period_end)
+    if not (current and noncurrent and total):
+        return None
+    summed = current["val"] + noncurrent["val"]
+    if summed <= 0:
+        return None
+    for equity_tag in EQUITY_TAGS:
+        equity = _instant_value(facts, equity_tag, period_end)
+        if equity and abs(summed - (total["val"] - equity["val"])) <= DERIVED_TOLERANCE * summed:
+            return summed, {
+                "tag": "derived: LiabilitiesCurrent + LiabilitiesNoncurrent",
+                "cross_check": f"LiabilitiesAndStockholdersEquity - {equity_tag}",
+                "filed": current["filed"],
+                "period_end": period_end,
+                "start": None,
+                "accession": current.get("accn"),
+            }
+    return None
 
 
 def extract_annual_metrics(companyfacts_path):
@@ -102,6 +147,11 @@ def extract_annual_metrics(companyfacts_path):
         else:
             results[metric] = None
             provenance[metric] = None
+
+    if results["total_liabilities"] is None:
+        derived = derive_total_liabilities(facts, period_end)
+        if derived is not None:
+            results["total_liabilities"], provenance["total_liabilities"] = derived
 
     ocf = results["operating_cash_flow"]
     capex = results["capital_expenditure"]

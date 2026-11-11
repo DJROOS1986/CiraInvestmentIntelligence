@@ -20,12 +20,52 @@ def optional_number(value, label):
         raise ValueError(f'{label} must be finite')
     return value
 
+FALLBACK_TAG_WARNINGS = {
+    'ProfitLoss': 'Net income uses ProfitLoss (includes non-controlling interests) because NetIncomeLoss is not reported',
+    'PaymentsToAcquireProductiveAssets': 'Capital expenditure uses PaymentsToAcquireProductiveAssets (may include some intangible assets)',
+}
+
+
+def universe_companies():
+    import json
+    from pathlib import Path
+    path = Path(__file__).resolve().parents[1] / 'config' / 'universe.json'
+    return json.loads(path.read_text(encoding='utf-8'))['companies']
+
+
+def universe_tickers():
+    return {c['ticker'] for c in universe_companies()}
+
+
+def universe_notes(ticker):
+    return next((list(c.get('notes', [])) for c in universe_companies() if c['ticker'] == ticker), [])
+
+
+def provenance_warnings(financial):
+    provenance = financial.get('provenance')
+    if not isinstance(provenance, dict):
+        return []
+    metrics = financial.get('metrics_usd') or {}
+    out = []
+    for key in ('revenue', 'net_income', 'total_assets', 'total_liabilities', 'operating_cash_flow', 'capital_expenditure'):
+        label = key.replace('_', ' ').capitalize()
+        if metrics.get(key) is None:
+            out.append(f'{label} not reported under supported SEC labels')
+            continue
+        tag = str((provenance.get(key) or {}).get('tag', ''))
+        if tag.startswith('derived:'):
+            out.append(f'{label} derived ({tag[len("derived:"):].strip()}), cross-checked against the balance sheet')
+        elif tag in FALLBACK_TAG_WARNINGS:
+            out.append(FALLBACK_TAG_WARNINGS[tag])
+    return out
+
+
 def build_company_intelligence(ticker, financial, prices, market, bcg_assessment, run_id=None):
     if run_id is not None:
         if not isinstance(run_id, str) or not run_id.strip():
             raise ValueError('Invalid processing run ID')
     ticker = ticker.upper().strip()
-    if ticker not in {'AAPL', 'MSFT'}:
+    if ticker not in universe_tickers():
         raise ValueError('Ticker not approved for initial integration')
     for (label, value) in (('financial', financial), ('prices', prices), ('market', market), ('bcg', bcg_assessment)):
         require_object(value, label)
@@ -59,8 +99,8 @@ def build_company_intelligence(ticker, financial, prices, market, bcg_assessment
         warnings.append('BCG classification is not independently verified')
     else:
         warnings.append('BCG classification is source-reported, not independently verified')
-    if ticker == 'MSFT':
-        warnings.append('Microsoft BCG growth figure refers to Azure segment growth, not independently verified market growth')
+    warnings.extend(universe_notes(ticker))
+    warnings.extend(provenance_warnings(financial))
     if price_type != 'adjusted':
         warnings.append('Historical price returns may exclude dividends and corporate-action adjustments')
     warnings.append('Financial reporting periods and market dates are not synchronized')

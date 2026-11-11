@@ -20,7 +20,7 @@ def main():
     source = ROOT / "reports" / "market-data"
     output = ROOT / "reports" / "market-analysis"
 
-    symbols = ("AAPL", "MSFT")
+    symbols = tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"])
     results = {}
 
     # Analyze all inputs before writing any output.

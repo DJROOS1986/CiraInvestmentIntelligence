@@ -4,10 +4,7 @@ import json
 from pathlib import Path
 
 
-COMPANY_ALIASES = {
-    "AAPL": "Apple",
-    "MSFT": "Microsoft",
-}
+COMPANY_ALIASES = {c["ticker"]: c["bcg_name"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"] if c.get("bcg_name")}
 
 VALID_CLASSES = {
     "Star",

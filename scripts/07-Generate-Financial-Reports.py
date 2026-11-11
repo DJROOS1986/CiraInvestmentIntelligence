@@ -17,7 +17,7 @@ spec.loader.exec_module(module)
 def main():
     sources = {}
 
-    for ticker in ("AAPL", "MSFT"):
+    for ticker in tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"]):
         files = list((SOURCE / ticker).rglob("*.json"))
         if not files:
             raise FileNotFoundError(

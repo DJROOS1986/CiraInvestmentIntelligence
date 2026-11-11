@@ -4,7 +4,7 @@ import json
 from datetime import datetime, timezone
 from pathlib import Path
 
-TICKERS = ('AAPL', 'MSFT')
+TICKERS = tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"])
 
 
 def read_json(data):
@@ -48,7 +48,7 @@ def load_azure(container):
     if hashlib.sha256(manifest_data).hexdigest() != pointer['manifest_sha256']:
         raise ValueError('Manifest integrity mismatch')
     manifest = read_json(manifest_data)
-    if manifest.get('status') != 'complete' or manifest.get('batch_id') != batch or manifest.get('report_count') != 2:
+    if manifest.get('status') != 'complete' or manifest.get('batch_id') != batch or manifest.get('report_count') != len(TICKERS):
         raise ValueError('Incomplete batch')
     companies, prices = {}, {}
     entries = manifest.get('reports', []) + manifest.get('artifacts', [])

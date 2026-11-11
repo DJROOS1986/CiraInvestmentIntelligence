@@ -43,7 +43,7 @@ if st.sidebar.button('Refresh reports'):
     dataset.clear()
     st.rerun()
 
-st.caption('RESEARCH WORKSPACE / AAPL · MSFT')
+st.caption(f'RESEARCH WORKSPACE / {len(TICKERS)} COMPANIES')
 st.title(view)
 st.write('Financial fundamentals, historical market context, and transparent data quality.')
 required_key = os.environ.get('CIRA_DASHBOARD_ACCESS_KEY')
@@ -123,7 +123,7 @@ if view == 'Company research':
 if view == 'Portfolio lab':
     st.info('Enter a hypothetical portfolio. Holdings stay in this session and are never sent to a broker.')
     positions = {}
-    for ticker, column in zip(TICKERS, st.columns(2)):
+    for ticker, column in zip(TICKERS, [col for row in [st.columns(4) for _ in range((len(TICKERS) + 3) // 4)] for col in row]):
         positions[ticker] = column.number_input(f'{ticker} units', min_value=0.0, value=0.0, step=1.0)
     cash = st.number_input('Cash (USD)', min_value=0.0, value=0.0, step=100.0)
     if any(positions.values()):

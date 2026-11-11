@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "ingestion"))
 from market_data import normalize_daily_prices
 
 
-SYMBOLS = ["AAPL", "MSFT"]
+SYMBOLS = list(tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"]))
 OUTPUT = ROOT / "reports" / "market-data"
 
 

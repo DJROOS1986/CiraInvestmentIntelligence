@@ -20,6 +20,7 @@ COPY ingestion/config.example.json /app/ingestion/
 COPY ingestion/bcg-research/bcg_research.json /app/ingestion/bcg-research/
 
 COPY portfolio-engine/ /app/portfolio-engine/
+COPY config/universe.json /app/config/universe.json
 
 COPY scripts/07-Generate-Financial-Reports.py /app/scripts/
 COPY scripts/10-Analyze-Financial-Reports.py /app/scripts/
