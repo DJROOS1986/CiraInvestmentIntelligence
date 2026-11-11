@@ -25,7 +25,7 @@ resource "azurerm_cognitive_deployment" "research" {
   }
   sku {
     name     = "GlobalStandard"
-    capacity = 1
+    capacity = 10
   }
   version_upgrade_option = "OnceNewDefaultVersionAvailable"
 }

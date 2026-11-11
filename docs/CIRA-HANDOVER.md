@@ -219,3 +219,16 @@ If the Terraform check shows changes nobody intended, stop and investigate drift
 - **Terraform state account `stciratf74e50510` restricted [verified]:** default Deny, bypass None, admin IP rule only; set with `scripts/40-Harden-TfState-Network.ps1` (re-run after an IP change; `-RemoveOtherIps` drops old rules). A future GitHub Actions pipeline needs its own access path.
 - `scripts/38-Security-Baseline.ps1` result: A 13/13, B 8/8, C 0/3.
 - **Open:** remove the dashboard access key using Entra identity headers; run Terraform from GitHub Actions with OIDC; Phase C optional (ACR Premium private endpoint, Log Analytics private query).
+
+---
+
+## 15. Repository, CI, build hygiene and AI resilience (11 Nov 2026)
+
+- **Remote:** private GitHub repo `DJROOS1986/CiraInvestmentIntelligence` (remote URL includes the username so Git Credential Manager uses the right account). History scanned before first push: no secrets; local-only files (`dev.tfvars`, `backend.hcl`, `.terraform`, `ingestion/config.json`, `.venv`, `.tools`) are ignored.
+- **CI:** `.github/workflows/ci.yml` runs on every push (tests on Ubuntu + Windows, `terraform validate` without Azure access). Green [verified]. Real plans/applies stay local until a VNet self-hosted runner exists.
+- **Dashboard sign-in:** accepts the Entra ID identity (`X-MS-CLIENT-PRINCIPAL-ID` must equal `CIRA_ALLOWED_PRINCIPAL_ID`); the access key is only a fallback. Planned: remove the key after a few days of stable sign-in.
+- **Line endings:** `.gitattributes` (LF for code/config, CRLF for PowerShell/C#; `cira_phase58_hardened_v2/**` stored as exact bytes so its Authenticode signature survives a fresh clone).
+- **Reproducible images:** base images pinned by digest; exact versions in `ingestion/constraints-research.txt` and `dashboard/constraints-dashboard.txt`; `scripts/37-Build-CIRA-Image.ps1` builds from a `git archive` of HEAD (~150 KiB upload). Build one image at a time: build, plan, apply, test, commit.
+- **Quarterly task:** bump base-image digests and constraint versions deliberately (security patches no longer arrive automatically), rebuild, test, record.
+- **AI highlights [verified 11 Nov]:** work end to end via the AI private endpoint (10.40.2.6) with the dashboard managed identity. Earlier "unavailable" errors were HTTP 429 (deployment capacity 1). Fix: capacity 10, one retry honouring Retry-After (max 20 s), and the dashboard now shows and logs the real reason (`describe_failure`). Diagnostics: `scripts/42-Diagnose-AI-Highlights.py`, `scripts/43-Reproduce-AI-With-Real-Report.py`; AI account metrics `TotalCalls/SuccessfulCalls/ClientErrors/BlockedCalls`.
+- Tests: 38 (25 existing + 8 dashboard access + 5 AI resilience).

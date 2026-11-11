@@ -114,8 +114,10 @@ if view == 'Company research':
                     with DefaultAzureCredential() as credential:
                         selected = agent.select_highlights(report, os.environ['CIRA_AI_ENDPOINT'], os.environ['CIRA_AI_DEPLOYMENT'], credential)
                     st.dataframe(pd.DataFrame(selected), hide_index=True)
-                except Exception:
-                    st.error('AI highlights are unavailable. The verified source reports remain available above.')
+                except Exception as exc:
+                    reason = agent.describe_failure(exc) if 'agent' in locals() else f'unexpected error ({type(exc).__name__})'
+                    print(f'CIRA AI highlights failed: {reason}', file=sys.stderr, flush=True)
+                    st.error(f'AI highlights are unavailable ({reason}). The verified source reports remain available above.')
     st.download_button('Download company report', __import__('json').dumps(report, indent=2), f'{ticker}-research.json', 'application/json')
 
 if view == 'Portfolio lab':
