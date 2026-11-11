@@ -84,10 +84,15 @@ try {
     $ctx = Join-Path $env:TEMP ('cira-build-{0}-{1}' -f $sha, [guid]::NewGuid().ToString('N').Substring(0, 8))
     $zip = "$ctx.zip"
     git archive --format=zip -o $zip HEAD
-    if ($LASTEXITCODE -ne 0) { throw 'git archive failed. Nothing built.' }
+    if ($LASTEXITCODE -ne 0 -or -not (Test-Path -LiteralPath $zip)) { throw 'git archive failed. Nothing built.' }
     try {
-        Expand-Archive -LiteralPath $zip -DestinationPath $ctx -Force
-        if (-not (Test-Path -LiteralPath (Join-Path $ctx $cfg.Dockerfile))) { throw "$($cfg.Dockerfile) is not committed. Nothing built." }
+        # .NET extraction instead of Expand-Archive (Windows PowerShell 5.1 Expand-Archive proved unreliable here).
+        Add-Type -AssemblyName System.IO.Compression.FileSystem
+        [IO.Compression.ZipFile]::ExtractToDirectory($zip, $ctx)
+        if (-not (Test-Path -LiteralPath (Join-Path $ctx $cfg.Dockerfile))) {
+            $top = (Get-ChildItem -LiteralPath $ctx -Force -ErrorAction SilentlyContinue | Select-Object -First 12 | ForEach-Object { $_.Name }) -join ', '
+            throw "$($cfg.Dockerfile) not found in build context $ctx. Top level: [$top]. Nothing built."
+        }
         $sizeMb = [math]::Round(((Get-ChildItem -LiteralPath $ctx -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), 1)
         Write-Host "Build context: $sizeMb MB (committed files of $sha)"
         az acr build --registry $Registry --image $target --file $cfg.Dockerfile $ctx
