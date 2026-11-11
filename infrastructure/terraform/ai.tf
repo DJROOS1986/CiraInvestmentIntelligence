@@ -6,8 +6,13 @@ resource "azurerm_cognitive_account" "research" {
   sku_name                      = "S0"
   custom_subdomain_name         = "ai-cira-${var.environment}-${random_string.suffix.result}"
   local_auth_enabled            = false
-  public_network_access_enabled = true
+  public_network_access_enabled = true # Phase B option 1: default Deny + admin IP allowlist; dashboard via private endpoint
   tags                          = local.common_tags
+
+  network_acls {
+    default_action = "Deny"
+    ip_rules       = var.allowed_admin_ips
+  }
 }
 
 resource "azurerm_cognitive_deployment" "research" {

@@ -22,7 +22,9 @@
 [CmdletBinding()]
 param(
     [switch]$Apply,
-    [switch]$Details
+    [switch]$Details,
+    # Resource addresses that may be REPLACED (delete + create). Anything else that deletes stays blocked.
+    [string[]]$AllowReplace = @()
 )
 
 $ErrorActionPreference = 'Stop'
@@ -77,8 +79,16 @@ try {
     $changes | ForEach-Object { '{0,-16} {1}' -f ($_.change.actions -join '+'), $_.address }
     $out | Where-Object { $_ -match '^Plan:' }
 
-    $risky = @($changes | Where-Object { $_.change.actions -contains 'delete' })
-    if ($risky.Count -gt 0) { Write-Warning "BLOCKED: plan deletes or replaces $($risky.Count) resource(s). Review with -Details; nothing applied."; return }
+    $isReplace = { param($c) ($c.change.actions -contains 'delete') -and ($c.change.actions -contains 'create') }
+    $allowed = @($changes | Where-Object { (& $isReplace $_) -and ($AllowReplace -contains $_.address) })
+    $risky   = @($changes | Where-Object { ($_.change.actions -contains 'delete') -and -not ((& $isReplace $_) -and ($AllowReplace -contains $_.address)) })
+    if ($allowed.Count -gt 0) { Write-Warning ('Replacements explicitly allowed: ' + (($allowed | ForEach-Object { $_.address }) -join ', ')) }
+    if ($risky.Count -gt 0) {
+        Write-Warning "BLOCKED: plan deletes or replaces $($risky.Count) resource(s) not covered by -AllowReplace:"
+        $risky | ForEach-Object { "   {0,-16} {1}" -f ($_.change.actions -join '+'), $_.address }
+        Write-Host 'Nothing applied. Review with -Details; allow specific replacements with -AllowReplace <address>,<address>.'
+        return
+    }
     if (-not $Apply) { Write-Host "`nPlan only, nothing applied. Re-run with -Apply to apply." -ForegroundColor Yellow; return }
 
     $answer = Read-Host 'Type APPLY to apply exactly the changes listed above (anything else cancels)'

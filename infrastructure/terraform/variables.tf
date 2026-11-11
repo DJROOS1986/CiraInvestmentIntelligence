@@ -27,3 +27,8 @@ variable "tags" {
   type    = map(string)
   default = {}
 }
+
+variable "allowed_admin_ips" {
+  type        = list(string)
+  description = "Public IPv4 addresses (no CIDR suffix) allowed through the Storage, Key Vault and AI firewalls for management. Set in dev.tfvars."
+}

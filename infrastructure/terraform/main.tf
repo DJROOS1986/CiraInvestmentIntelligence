@@ -19,6 +19,7 @@ module "storage" {
   location            = azurerm_resource_group.main.location
   name                = "st${var.project}${var.environment}${random_string.suffix.result}"
   tags                = local.common_tags
+  allowed_ips         = var.allowed_admin_ips
 }
 module "monitoring" {
   source              = "./modules/monitoring"
@@ -34,6 +35,7 @@ module "keyvault" {
   name                = "kv-${local.prefix}-${random_string.suffix.result}"
   tenant_id           = var.tenant_id
   tags                = local.common_tags
+  allowed_ips         = var.allowed_admin_ips
 }
 resource "azurerm_consumption_budget_resource_group" "monthly" {
   count             = length(var.budget_contact_emails) > 0 ? 1 : 0

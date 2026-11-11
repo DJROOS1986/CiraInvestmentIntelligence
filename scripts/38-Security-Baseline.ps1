@@ -58,15 +58,15 @@ function Add-Check([string]$Res, [string]$Setting, $Value, [string]$Target, [str
 
 function Get-PeCount($Obj) { return @(Get-Prop $Obj 'properties.privateEndpointConnections' | Where-Object { $_ }).Count }
 
-function Test-StorageAccount([string]$Rg, [string]$Name, [string]$Label) {
+# Phase B target (option 1): firewall default Deny + admin IP allowlist; workloads via private endpoint.
+function Test-StorageAccount([string]$Rg, [string]$Name, [string]$Label, [bool]$NeedsPe = $true) {
     $s = Get-Res $Rg $Name 'Microsoft.Storage/storageAccounts'
     if (-not $s) { Add-Check $Label 'resource readable' $null 'yes' 'A'; return }
     Add-Check $Label 'allowSharedKeyAccess'          (Get-Prop $s 'properties.allowSharedKeyAccess')       'False'    'A' 'True'
     Add-Check $Label 'allowBlobPublicAccess'         (Get-Prop $s 'properties.allowBlobPublicAccess')      'False'    'A'
     Add-Check $Label 'minimumTlsVersion'             (Get-Prop $s 'properties.minimumTlsVersion')          'TLS1_2'   'A'
-    Add-Check $Label 'publicNetworkAccess'           (Get-Prop $s 'properties.publicNetworkAccess')        'Disabled' 'B' 'Enabled'
     Add-Check $Label 'networkAcls.defaultAction'     (Get-Prop $s 'properties.networkAcls.defaultAction')  'Deny'     'B' 'Allow'
-    Add-Check $Label 'private endpoints (count >= 1)' ([int]((Get-PeCount $s) -ge 1))                      '1'        'B'
+    if ($NeedsPe) { Add-Check $Label 'private endpoints (count >= 1)' ([int]((Get-PeCount $s) -ge 1)) '1' 'B' }
 }
 
 Write-Host 'Reading resource properties (read-only)...' -ForegroundColor Cyan
@@ -79,14 +79,14 @@ if (Test-Path -LiteralPath $backend) {
     $sa = [regex]::Match($b, '(?m)^\s*storage_account_name\s*=\s*"([^"]+)"').Groups[1].Value
     $rg = [regex]::Match($b, '(?m)^\s*resource_group_name\s*=\s*"([^"]+)"').Groups[1].Value
     $aad = [regex]::Match($b, '(?m)^\s*use_azuread_auth\s*=\s*(\w+)').Groups[1].Value
-    if ($sa -and $rg) { Test-StorageAccount $rg $sa "tfstate $sa" }
+    if ($sa -and $rg) { Test-StorageAccount $rg $sa "tfstate $sa" $false }
     Add-Check 'terraform backend' 'use_azuread_auth' $(if ($aad) { $aad } else { $null }) 'true' 'A' 'false'
 }
 
 $kv = Get-Res $ResourceGroup $KeyVault 'Microsoft.KeyVault/vaults'
 Add-Check "keyvault $KeyVault" 'enableRbacAuthorization' (Get-Prop $kv 'properties.enableRbacAuthorization') 'True' 'A' 'False'
 Add-Check "keyvault $KeyVault" 'enablePurgeProtection'   (Get-Prop $kv 'properties.enablePurgeProtection')   'True' 'A' 'False'
-Add-Check "keyvault $KeyVault" 'publicNetworkAccess'     (Get-Prop $kv 'properties.publicNetworkAccess')     'Disabled' 'B' 'Enabled'
+Add-Check "keyvault $KeyVault" 'networkAcls.defaultAction' (Get-Prop $kv 'properties.networkAcls.defaultAction') 'Deny' 'B' 'Allow'
 Add-Check "keyvault $KeyVault" 'private endpoints (count >= 1)' ([int]((Get-PeCount $kv) -ge 1)) '1' 'B'
 
 $acr = Get-Res $ResourceGroup $Registry 'Microsoft.ContainerRegistry/registries'
@@ -97,7 +97,7 @@ Add-Check "acr $Registry" 'publicNetworkAccess' (Get-Prop $acr 'properties.publi
 
 $ai = Get-Res $ResourceGroup $AiAccount 'Microsoft.CognitiveServices/accounts'
 Add-Check "ai $AiAccount" 'disableLocalAuth (keyless)' (Get-Prop $ai 'properties.disableLocalAuth') 'True' 'A' 'False'
-Add-Check "ai $AiAccount" 'publicNetworkAccess'        (Get-Prop $ai 'properties.publicNetworkAccess') 'Disabled' 'B' 'Enabled'
+Add-Check "ai $AiAccount" 'networkAcls.defaultAction'  (Get-Prop $ai 'properties.networkAcls.defaultAction') 'Deny' 'B' 'Allow'
 Add-Check "ai $AiAccount" 'private endpoints (count >= 1)' ([int]((Get-PeCount $ai) -ge 1)) '1' 'B'
 
 $env = Get-Res $ResourceGroup $Environment 'Microsoft.App/managedEnvironments'

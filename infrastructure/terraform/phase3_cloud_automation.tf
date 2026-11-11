@@ -26,11 +26,14 @@ resource "azurerm_role_assignment" "cira_acr_pull" {
   principal_id         = azurerm_user_assigned_identity.cira.principal_id
 }
 
+# Phase B: VNet-integrated environment. Setting the subnet REPLACES the environment (and the job and
+# dashboard inside it); apply with an explicit -AllowReplace list.
 resource "azurerm_container_app_environment" "cira" {
   name                       = "cae-cira-dev"
   location                   = azurerm_resource_group.main.location
   resource_group_name        = azurerm_resource_group.main.name
   log_analytics_workspace_id = module.monitoring.workspace_id
+  infrastructure_subnet_id   = azurerm_subnet.cae.id
   tags                       = local.common_tags
   workload_profile {
     name                  = "Consumption"
@@ -39,4 +42,3 @@ resource "azurerm_container_app_environment" "cira" {
     maximum_count         = 0
   }
 }
-

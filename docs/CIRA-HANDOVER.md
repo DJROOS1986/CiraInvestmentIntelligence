@@ -148,7 +148,7 @@ Longest normal gap between successful runs is 13.5 h (09:00 → 22:30), so 15 h 
 - Theme is now defined in `dashboard.tf` (previously only set via CLI, which a Terraform apply would have removed).
 - Rollback image if the AI build misbehaves: apply with `-var=cira_dashboard_image_tag=dashboard-20261109`.
 - Access protection is an application-level key, not Entra ID sign-in. Move to Entra before any Saxo data is shown.
-- URL: `https://ca-cira-dashboard-dev.thankfulocean-daf96fc5.northeurope.azurecontainerapps.io`
+- URL: `https://ca-cira-dashboard-dev.lemonpebble-6d0d2f65.northeurope.azurecontainerapps.io`
 
 ---
 
@@ -205,3 +205,17 @@ python scripts/35-Check-Price-Consistency.py           # data-quality status
 If the Terraform check shows changes nobody intended, stop and investigate drift before doing anything else.
 
 **Operating principle:** preserve what works, verify what is uncertain, change only what is necessary, test each change before continuing.
+
+---
+
+## 14. Security hardening (11 Nov 2026)
+
+- **Phase A complete [verified]:** all data access is keyless (Storage and tfstate shared keys off, Terraform backend Entra auth, Key Vault RBAC + purge protection, ACR admin/anonymous pull off, AI local auth off). Dashboard behind **Entra ID sign-in**: app registration "CIRA Dashboard (dev)", assignment required, only Roland assigned, no client secret (providers `azuread` + `azapi`). The app-level access key is still active as a second layer.
+- **Phase B option 1 complete [verified]:** `vnet-cira-dev` 10.40.0.0/16 (`snet-cae` /23 delegated to Microsoft.App/environments, `snet-pe` /24). Private endpoints + private DNS zones for blob, Key Vault and AI. Storage, Key Vault and AI firewalls **default Deny**, no Azure-services bypass, admin IP allowlist via `var.allowed_admin_ips` (untracked `dev.tfvars`). `cae-cira-dev` recreated VNet-integrated (old environment took ~20 min to delete). Job and dashboard both verified over the private path on 11 Nov.
+- **Dashboard URL changed** to `https://ca-cira-dashboard-dev.lemonpebble-6d0d2f65.northeurope.azurecontainerapps.io`.
+- **If the home IP changes:** run `scripts/39-Prepare-PhaseB.ps1` then `Invoke-CIRA-Terraform.ps1 -Apply` (workload firewalls), and `scripts/40-Harden-TfState-Network.ps1 -RemoveOtherIps` (state account).
+- `Invoke-CIRA-Terraform.ps1` supports `-AllowReplace <address>,...`; every other delete/replace stays blocked.
+- **Laptop has 7.9 GB RAM:** run Terraform outside VS Code (VS Code used ~2.6 GB; the azurerm provider once crashed out of memory during validate).
+- **Terraform state account `stciratf74e50510` restricted [verified]:** default Deny, bypass None, admin IP rule only; set with `scripts/40-Harden-TfState-Network.ps1` (re-run after an IP change; `-RemoveOtherIps` drops old rules). A future GitHub Actions pipeline needs its own access path.
+- `scripts/38-Security-Baseline.ps1` result: A 13/13, B 8/8, C 0/3.
+- **Open:** remove the dashboard access key using Entra identity headers; run Terraform from GitHub Actions with OIDC; Phase C optional (ACR Premium private endpoint, Log Analytics private query).
