@@ -232,3 +232,17 @@ If the Terraform check shows changes nobody intended, stop and investigate drift
 - **Quarterly task:** bump base-image digests and constraint versions deliberately (security patches no longer arrive automatically), rebuild, test, record.
 - **AI highlights [verified 11 Nov]:** work end to end via the AI private endpoint (10.40.2.6) with the dashboard managed identity. Earlier "unavailable" errors were HTTP 429 (deployment capacity 1). Fix: capacity 10, one retry honouring Retry-After (max 20 s), and the dashboard now shows and logs the real reason (`describe_failure`). Diagnostics: `scripts/42-Diagnose-AI-Highlights.py`, `scripts/43-Reproduce-AI-With-Real-Report.py`; AI account metrics `TotalCalls/SuccessfulCalls/ClientErrors/BlockedCalls`.
 - Tests: 38 (25 existing + 8 dashboard access + 5 AI resilience).
+
+---
+
+## 16. Research universe (11 Nov 2026)
+
+- **12 companies live [verified]:** AAPL, MSFT + 10 pilots from the BCG matrix (KLAC, ISRG, LRCX, AVGO, NVDA, VEEV, NOW, SNPS, CDNS, LLY). First 12-company batch from run `caj-cira-dev-r5p46rx` (11 Nov 21:11 UTC, after US close); dashboard shows all 12.
+- **Single source of truth:** `config/universe.json` (ticker, SEC-verified CIK, SEC name, exact BCG name, notes). Every pipeline stage, the engine, the BCG mapping and the dashboard read it; `tests/test_universe.py` fails if a hard-coded ticker list returns.
+- **Identifier master:** `config/identifiers.csv` covers all 143 BCG rows: SEC_10K 67 (11 in CIRA, 56 to add), SEC_20F 13, PROVIDER 62 rows / 60 companies, PARKED 1 (X-Energy, no 10-K yet). Built by `scripts/48` (SEC list + OpenFIGI) and `scripts/49` (reviewed decisions). `certainty = to_verify` rows (e.g. Hoya 7741, Delta 2308, Tencent 700) must be checked before the provider stage.
+- **Adding a company:** verify with `scripts/45` and `scripts/46`, add one entry to `universe.json`, run tests, commit, rebuild research image, run, then dashboard image. Stage 1 = US 10-K filers only.
+- **Methodology additions (recorded in provenance, shown as data-quality notes):** net income falls back to `ProfitLoss` (AVGO); capex falls back to `PaymentsToAcquireProductiveAssets` (ISRG, LRCX, NVDA); total liabilities derived as current + non-current only when it equals total liabilities-and-equity minus equity (CDNS, LLY). All metrics aligned to the revenue fiscal period.
+- **Known gaps:** VEEV capex not in us-gaap labels (FCF null); LLY capex only as "Other PP&E" (held until verified against the 10-K, FCF null).
+- **Per-company publishing:** a company failing a stage is excluded (`CIRA COMPANY FAILED: <ticker> <stage>: <reason>`) and recorded in the manifest (`excluded`); more than 10% excluded fails the run; SEC ingestion stays fail-closed. Dashboard shows partial batches with a warning. Alert rule for `CIRA COMPANY FAILED` still to add.
+- **Open:** action-group email `CiraFailureEmail` still **Pending verification**: failure alerts are NOT delivered until verified (portal: action group, Resend, click link, Refresh).
+- **Data sources (decided 11 Nov):** SEC EDGAR (US, official), OpenFIGI (identifiers, free), EODHD to be trialled for non-SEC names (verify price and licence terms), Yahoo chart endpoint as interim price source (unofficial, personal use only). Official non-US filing systems (EDINET, DART, MOPS, ESEF) for hand-checks.
