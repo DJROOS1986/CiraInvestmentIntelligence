@@ -10,7 +10,7 @@ import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from data import TICKERS, freshness, load_azure, load_local
+from data import TICKERS, freshness, load_azure, load_local
 from access import entra_allowed
 
 st.set_page_config(page_title='CIRA | Research workspace', page_icon='◈', layout='wide')

@@ -6,7 +6,8 @@
     1. Preflight: clean Git tree (so the image matches a commit), Dockerfile present,
        registry reachable, tag not already used (tags are never overwritten).
     2. Shows the plan and waits for you to type BUILD.
-    3. Builds with `az acr build` (cloud build, no local Docker needed; small ACR Tasks cost).
+    3. Builds with `az acr build` from a `git archive` of HEAD (only committed files are uploaded;
+       cloud build, no local Docker needed; small ACR Tasks cost).
     4. Verifies the new tag exists in the registry.
     5. Appends a record to docs/IMAGE-BUILDS.md and sets the Terraform variable default
        to the new tag (skip with -SkipTerraformUpdate).
@@ -77,9 +78,25 @@ try {
     $answer = Read-Host 'Type BUILD to build this image in ACR (anything else cancels)'
     if ($answer -cne 'BUILD') { Write-Host 'Cancelled. Nothing built.'; return }
 
-    Write-Step '3/5 Build (az acr build)'
-    az acr build --registry $Registry --image $target --file $cfg.Dockerfile .
-    if ($LASTEXITCODE -ne 0) { throw 'az acr build failed. Nothing recorded, Terraform unchanged.' }
+    Write-Step '3/5 Build (az acr build, context = committed files only)'
+    # git archive gives exactly the files of this commit: small upload (no .terraform, .tools, .venv)
+    # and an image that matches the commit byte for byte.
+    $ctx = Join-Path $env:TEMP ('cira-build-{0}-{1}' -f $sha, [guid]::NewGuid().ToString('N').Substring(0, 8))
+    $zip = "$ctx.zip"
+    git archive --format=zip -o $zip HEAD
+    if ($LASTEXITCODE -ne 0) { throw 'git archive failed. Nothing built.' }
+    try {
+        Expand-Archive -LiteralPath $zip -DestinationPath $ctx -Force
+        if (-not (Test-Path -LiteralPath (Join-Path $ctx $cfg.Dockerfile))) { throw "$($cfg.Dockerfile) is not committed. Nothing built." }
+        $sizeMb = [math]::Round(((Get-ChildItem -LiteralPath $ctx -Recurse -File | Measure-Object Length -Sum).Sum / 1MB), 1)
+        Write-Host "Build context: $sizeMb MB (committed files of $sha)"
+        az acr build --registry $Registry --image $target --file $cfg.Dockerfile $ctx
+        if ($LASTEXITCODE -ne 0) { throw 'az acr build failed. Nothing recorded, Terraform unchanged.' }
+    }
+    finally {
+        Remove-Item -LiteralPath $zip -Force -ErrorAction SilentlyContinue
+        Remove-Item -LiteralPath $ctx -Recurse -Force -ErrorAction SilentlyContinue
+    }
 
     Write-Step '4/5 Verify'
     $after = @(az acr repository show-tags --name $Registry --repository $cfg.Repo -o tsv)
