@@ -14,7 +14,7 @@ from datetime import date, datetime, timezone
 from pathlib import Path
 
 
-TICKERS = tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"])
+TICKERS = __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]()
 PREFIX = "financial-intelligence/batches"
 
 
@@ -29,6 +29,8 @@ def prepare(source):
         + uuid.uuid4().hex[:12]
     )
 
+    excluded = __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["check_threshold"]()
+    TICKERS = __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]()
     entries = []
     payloads = {}
     run_ids = set()
@@ -88,6 +90,7 @@ def prepare(source):
         "status": "complete",
         "report_count": len(entries),
         "reports": entries,
+        "excluded": excluded,
     }
 
     artifacts = []

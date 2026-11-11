@@ -20,19 +20,23 @@ def main():
     source = ROOT / "reports" / "market-data"
     output = ROOT / "reports" / "market-analysis"
 
-    symbols = tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"])
+    symbols = __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]()
     results = {}
 
     # Analyze all inputs before writing any output.
     for symbol in symbols:
-        path = source / f"{symbol}-daily-prices.json"
+        try:
+            path = source / f"{symbol}-daily-prices.json"
 
-        document = json.loads(path.read_text(encoding="utf-8"))
+            document = json.loads(path.read_text(encoding="utf-8"))
 
-        if document.get("symbol") != symbol:
-            raise ValueError(f"Unexpected symbol in {path}")
+            if document.get("symbol") != symbol:
+                raise ValueError(f"Unexpected symbol in {path}")
 
-        results[symbol] = module.analyze_prices(document)
+            results[symbol] = module.analyze_prices(document)
+        except Exception as exc:  # per-company: exclude and continue
+            __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["exclude"](symbol, "market-analysis", exc)
+            continue
 
     output.mkdir(parents=True, exist_ok=True)
 

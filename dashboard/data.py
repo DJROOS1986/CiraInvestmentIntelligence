@@ -11,9 +11,9 @@ def read_json(data):
     return json.loads(data.decode('utf-8-sig'))
 
 
-def validate_companies(companies):
+def validate_companies(companies, tickers=TICKERS):
     run_ids = set()
-    for ticker in TICKERS:
+    for ticker in tickers:
         report = companies[ticker]
         if report.get('ticker') != ticker or report.get('schema_version') != '1.0':
             raise ValueError('Unexpected company report schema')
@@ -48,12 +48,15 @@ def load_azure(container):
     if hashlib.sha256(manifest_data).hexdigest() != pointer['manifest_sha256']:
         raise ValueError('Manifest integrity mismatch')
     manifest = read_json(manifest_data)
-    if manifest.get('status') != 'complete' or manifest.get('batch_id') != batch or manifest.get('report_count') != len(TICKERS):
+    if manifest.get('status') != 'complete' or manifest.get('batch_id') != batch or manifest.get('report_count') != len(manifest.get('reports', [])):
         raise ValueError('Incomplete batch')
     companies, prices = {}, {}
     entries = manifest.get('reports', []) + manifest.get('artifacts', [])
-    expected = {prefix + f'company-intelligence/{t}-company-intelligence.json': (companies, t) for t in TICKERS}
-    expected.update({prefix + f'market-data/{t}-daily-prices.json': (prices, t) for t in TICKERS})
+    present = [entry.get('ticker') for entry in manifest.get('reports', [])]
+    if not present or len(set(present)) != len(present) or not set(present) <= set(TICKERS):
+        raise ValueError('Unexpected batch company list')
+    expected = {prefix + f'company-intelligence/{t}-company-intelligence.json': (companies, t) for t in present}
+    expected.update({prefix + f'market-data/{t}-daily-prices.json': (prices, t) for t in present})
     seen = set()
     for entry in entries:
         path = entry['blob_path']
@@ -69,10 +72,10 @@ def load_azure(container):
         target[ticker] = read_json(payload)
     if seen != set(expected):
         raise ValueError('Batch missing company reports or price histories')
-    validate_companies(companies)
+    validate_companies(companies, present)
     if any(r['run_id'] != manifest['run_id'] for r in companies.values()):
         raise ValueError('Report run differs from manifest')
-    return {'companies': companies, 'prices': prices, 'source': 'Azure verified batch', 'batch_id': batch}
+    return {'companies': companies, 'prices': prices, 'source': 'Azure verified batch', 'batch_id': batch, 'excluded': manifest.get('excluded') or {}}
 
 
 def freshness(report, now=None):

@@ -14,7 +14,7 @@ sys.path.insert(0, str(ROOT / "ingestion"))
 from market_data import normalize_daily_prices
 
 
-SYMBOLS = list(tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"]))
+SYMBOLS = list(__import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]())
 OUTPUT = ROOT / "reports" / "market-data"
 
 
@@ -129,10 +129,12 @@ def main():
         except (requests.RequestException, RuntimeError,
                 ValueError, TypeError, KeyError) as exc:
             failures.append(symbol)
+            __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["exclude"](symbol, "market-prices", exc)
             print(f"FAILED: {symbol}: {exc}")
 
     if failures:
         print("\nFailed symbols:", ", ".join(failures))
+    if failures and len(failures) == len(SYMBOLS):
         return 1
 
     print("\nCIRA MARKET INGESTION SUCCESS")

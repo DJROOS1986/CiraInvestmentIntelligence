@@ -10,7 +10,7 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 OUTPUT = ROOT / "reports" / "company-intelligence"
-TICKERS = tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"])
+TICKERS = __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]()
 
 
 def load_module(name, path):
@@ -46,25 +46,29 @@ def build_reports():
     reports = {}
 
     for ticker in TICKERS:
-        financial = read_json(
-            ROOT / "reports" / "financial"
-            / f"{ticker}-financial-report.json"
-        )
-        prices = read_json(
-            ROOT / "reports" / "market-data"
-            / f"{ticker}-daily-prices.json"
-        )
-        market = read_json(
-            ROOT / "reports" / "market-analysis"
-            / f"{ticker}-market-analysis.json"
-        )
+        try:
+            financial = read_json(
+                ROOT / "reports" / "financial"
+                / f"{ticker}-financial-report.json"
+            )
+            prices = read_json(
+                ROOT / "reports" / "market-data"
+                / f"{ticker}-daily-prices.json"
+            )
+            market = read_json(
+                ROOT / "reports" / "market-analysis"
+                / f"{ticker}-market-analysis.json"
+            )
 
-        assessment = bcg.integrate_bcg(ticker, database)
+            assessment = bcg.integrate_bcg(ticker, database)
 
-        reports[ticker] = engine.build_company_intelligence(
-            ticker, financial, prices, market, assessment, run_id=run_id
-        )
-        reports[ticker]['generated_at_utc'] = generated_at
+            reports[ticker] = engine.build_company_intelligence(
+                ticker, financial, prices, market, assessment, run_id=run_id
+            )
+            reports[ticker]['generated_at_utc'] = generated_at
+        except Exception as exc:  # per-company: exclude and continue
+            __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["exclude"](ticker, "company-intelligence", exc)
+            continue
 
     return reports
 

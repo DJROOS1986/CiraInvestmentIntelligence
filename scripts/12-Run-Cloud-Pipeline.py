@@ -60,6 +60,7 @@ def run_stage(filename):
 
 def main():
     ingestion = load_ingestion()
+    __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["reset"]()
     if os.getenv("CIRA_SEC_USER_AGENT"):
         cfg = {
             "storage_account": os.environ["CIRA_STORAGE_ACCOUNT"],
@@ -148,7 +149,7 @@ def main():
     )
 
     expected = [
-        *[REPORTS / "financial" / f"{t}-financial-report.json" for t in tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"])],
+        *[REPORTS / "financial" / f"{t}-financial-report.json" for t in __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]()],
         REPORTS / "analysis" / "company-comparison.json",
         REPORTS / "analysis" / "company-comparison.txt",
     ]

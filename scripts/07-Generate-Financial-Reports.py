@@ -17,12 +17,11 @@ spec.loader.exec_module(module)
 def main():
     sources = {}
 
-    for ticker in tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"]):
+    for ticker in __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]():
         files = list((SOURCE / ticker).rglob("*.json"))
         if not files:
-            raise FileNotFoundError(
-                f"No SEC Company Facts found for {ticker}"
-            )
+            __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["exclude"](ticker, "financial-report", "No SEC Company Facts found")
+            continue
         sources[ticker] = max(
             files, key=lambda path: path.stat().st_mtime
         )
@@ -30,7 +29,11 @@ def main():
     reports = {}
 
     for ticker, source in sources.items():
-        result = module.extract_annual_metrics(source)
+        try:
+            result = module.extract_annual_metrics(source)
+        except Exception as exc:  # per-company: exclude and continue
+            __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["exclude"](ticker, "financial-report", exc)
+            continue
         reports[ticker] = {
             "ticker": ticker,
             "generated_at_utc": datetime.now(
