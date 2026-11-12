@@ -3,8 +3,7 @@
   "description": "CIRA research universe. Single source of truth for every pipeline stage and the dashboard. CIKs verified against SEC company_tickers.json and submissions on 11 Nov 2026 (scripts/45-Verify-Universe-Candidates.py).",
   "companies": [
     {"ticker": "AAPL", "cik": "0000320193", "sec_name": "Apple Inc.", "bcg_name": "Apple", "bcg_required": false, "annual_form": "10-K", "notes": []},
-    {"ticker": "MSFT", "cik": "0000789019", "sec_name": "MICROSOFT CORP", "bcg_name": "Microsoft", "bcg_required": false, "annual_form": "10-K",
-     "notes": ["Microsoft BCG growth figure refers to Azure segment growth, not independently verified market growth"]},
+    {"ticker": "MSFT", "cik": "0000789019", "sec_name": "MICROSOFT CORP", "bcg_name": "Microsoft", "bcg_required": false, "annual_form": "10-K", "notes": ["Microsoft BCG growth figure refers to Azure segment growth, not independently verified market growth"]},
     {"ticker": "KLAC", "cik": "0000319201", "sec_name": "KLA CORP", "bcg_name": "KLA Corporation", "bcg_required": true, "annual_form": "10-K", "notes": []},
     {"ticker": "ISRG", "cik": "0001035267", "sec_name": "INTUITIVE SURGICAL INC", "bcg_name": "Intuitive Surgical", "bcg_required": true, "annual_form": "10-K", "notes": []},
     {"ticker": "LRCX", "cik": "0000707549", "sec_name": "LAM RESEARCH CORP", "bcg_name": "Lam Research", "bcg_required": true, "annual_form": "10-K", "notes": []},
@@ -14,7 +13,21 @@
     {"ticker": "NOW", "cik": "0001373715", "sec_name": "ServiceNow, Inc.", "bcg_name": "ServiceNow", "bcg_required": true, "annual_form": "10-K", "notes": []},
     {"ticker": "SNPS", "cik": "0000883241", "sec_name": "SYNOPSYS INC", "bcg_name": "Synopsys", "bcg_required": true, "annual_form": "10-K", "notes": []},
     {"ticker": "CDNS", "cik": "0000813672", "sec_name": "CADENCE DESIGN SYSTEMS INC", "bcg_name": "Cadence Design Systems", "bcg_required": true, "annual_form": "10-K", "notes": []},
-    {"ticker": "LLY", "cik": "0000059478", "sec_name": "ELI LILLY & Co", "bcg_name": "Eli Lilly", "bcg_required": true, "annual_form": "10-K",
-     "notes": ["Capital expenditure is reported only as PaymentsToAcquireOtherPropertyPlantAndEquipment; excluded until verified against the 10-K cash flow statement, so free cash flow is unavailable"]}
+    {"ticker": "LLY", "cik": "0000059478", "sec_name": "ELI LILLY & Co", "bcg_name": "Eli Lilly", "bcg_required": true, "annual_form": "10-K", "notes": ["Capital expenditure is reported only as PaymentsToAcquireOtherPropertyPlantAndEquipment; excluded until verified against the 10-K cash flow statement, so free cash flow is unavailable"]},
+    {"ticker": "CRDO", "cik": "0001807794", "sec_name": "Credo Technology Group Holding Ltd", "bcg_name": "Credo Technology", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "HWM", "cik": "0000004281", "sec_name": "Howmet Aerospace Inc.", "bcg_name": "Howmet Aerospace", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "AMZN", "cik": "0001018724", "sec_name": "Amazon.com", "bcg_name": "Amazon (AWS)", "bcg_required": true, "annual_form": "10-K", "notes": ["AWS is a segment; figures are for all of Amazon"]},
+    {"ticker": "APH", "cik": "0000820313", "sec_name": "AMPHENOL CORP /DE/", "bcg_name": "Amphenol", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "GOOGL", "cik": "0001652044", "sec_name": "Alphabet Inc.", "bcg_name": "Alphabet", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "ANET", "cik": "0001596532", "sec_name": "Arista Networks, Inc.", "bcg_name": "Arista Networks", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "ALAB", "cik": "0001736297", "sec_name": "Astera Labs, Inc.", "bcg_name": "Astera Labs", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "PODD", "cik": "0001145197", "sec_name": "INSULET CORP", "bcg_name": "Insulet", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "VRTX", "cik": "0000875320", "sec_name": "VERTEX PHARMACEUTICALS INC / MA", "bcg_name": "Vertex Pharmaceuticals", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "LITE", "cik": "0001633978", "sec_name": "Lumentum Holdings Inc.", "bcg_name": "Lumentum Holdings", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "AMAT", "cik": "0000006951", "sec_name": "APPLIED MATERIALS INC /DE", "bcg_name": "Applied Materials", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "MRVL", "cik": "0001835632", "sec_name": "Marvell Technology, Inc.", "bcg_name": "Marvell Technology", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "STX", "cik": "0001137789", "sec_name": "Seagate Technology Holdings plc", "bcg_name": "Seagate Technology", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "TER", "cik": "0000097210", "sec_name": "TERADYNE, INC", "bcg_name": "Teradyne", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "PANW", "cik": "0001327567", "sec_name": "Palo Alto Networks Inc", "bcg_name": "Palo Alto Networks", "bcg_required": true, "annual_form": "10-K", "notes": []}
   ]
 }
