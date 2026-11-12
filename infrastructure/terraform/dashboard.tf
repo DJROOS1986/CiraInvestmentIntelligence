@@ -1,6 +1,6 @@
 variable "cira_dashboard_image_tag" {
   type    = string
-  default = "dashboard-20261112-1e11f9b"
+  default = "dashboard-20261112-edd0f9e"
 }
 
 resource "azurerm_user_assigned_identity" "dashboard" {
