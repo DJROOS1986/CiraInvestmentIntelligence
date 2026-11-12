@@ -6,6 +6,7 @@ from pathlib import Path
 import sys
 
 import pandas as pd
+import altair as alt
 import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -92,7 +93,7 @@ if view == 'Company research':
         column.metric(label, display)
     history = pd.DataFrame(data['prices'][ticker]['records'])
     st.subheader('Historical closing prices')
-    st.line_chart(history.set_index('date')['close'], color='#5eead4')
+    st.altair_chart(alt.Chart(history).mark_line(color='#5eead4').encode(x=alt.X('date:T', title=None), y=alt.Y('close:Q', title=None, scale=alt.Scale(zero=False))), width='stretch')
     st.caption('USD · Unadjusted historical prices; returns may exclude dividends and corporate-action adjustments.')
     st.subheader('Market context')
     st.dataframe(pd.DataFrame([{'Metric': key.replace('_', ' ').title(), 'Value': value} for key, value in indicators.items()]), hide_index=True)
@@ -137,7 +138,7 @@ if view == 'Portfolio lab':
             for column, label, value in zip(st.columns(3), ['Market value', 'Historical volatility', 'Maximum drawdown'],
                     [f"${result['market_value']:,.2f}", f"{result['annualized_volatility_pct']:.2f}%", f"{result['maximum_drawdown_pct']:.2f}%"]):
                 column.metric(label, value)
-            st.line_chart(pd.DataFrame(result['history']).set_index('date')['value'], color='#5eead4')
+            st.altair_chart(alt.Chart(pd.DataFrame(result['history'])).mark_line(color='#5eead4').encode(x=alt.X('date:T', title=None), y=alt.Y('value:Q', title=None, scale=alt.Scale(zero=False))), width='stretch')
             st.dataframe(pd.DataFrame([{'Holding': s, 'Allocation %': v} for s, v in result['allocations_pct'].items()]), hide_index=True)
             st.caption(result['method'])
             st.caption(f"{result['observations']} observations through {result['latest_date']}. Historical volatility is not a forecast.")
