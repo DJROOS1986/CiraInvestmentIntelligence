@@ -120,7 +120,9 @@ if view == 'Company research':
 if view == 'Portfolio lab':
     st.info('Enter a hypothetical portfolio. Holdings stay in this session and are never sent to a broker.')
     positions = {}
-    for ticker, column in zip(list(data['companies']), [col for row in [st.columns(4) for _ in range((len(data['companies']) + 3) // 4)] for col in row]):
+    held = st.multiselect('Holdings - choose the companies you hold', list(data['companies']))
+    columns = [col for row in [st.columns(4) for _ in range((len(held) + 3) // 4)] for col in row]
+    for ticker, column in zip(held, columns):
         positions[ticker] = column.number_input(f'{ticker} units', min_value=0.0, value=0.0, step=1.0)
     cash = st.number_input('Cash (USD)', min_value=0.0, value=0.0, step=100.0)
     if any(positions.values()):

@@ -161,6 +161,7 @@ def test_dashboard_views(research_root, monkeypatch):
     assert not app.exception
     assert app.title[0].value == 'Company research'
     app.sidebar.radio[0].set_value('Portfolio lab').run()
+    app.multiselect[0].set_value(['AAPL']).run()
     app.number_input[0].set_value(2.0).run()
     assert not app.exception
     assert app.metric[0].value == '$198.00'
