@@ -90,7 +90,7 @@ def select_highlights(report, endpoint, deployment, credential, session=requests
     }
     headers = {'Authorization': f'Bearer {token}'}
     response = session.post(url, headers=headers, timeout=45, json=payload)
-    if response.status_code == 429:
+    if getattr(response, 'status_code', None) == 429:
         sleep(retry_wait_seconds(response))
         response = session.post(url, headers=headers, timeout=45, json=payload)
     response.raise_for_status()

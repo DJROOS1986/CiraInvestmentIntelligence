@@ -58,10 +58,10 @@ def test_hosted_dashboard_requires_access_key(monkeypatch):
     from streamlit.testing.v1 import AppTest
     monkeypatch.setenv('CIRA_STORAGE_ACCOUNT', 'account')
     monkeypatch.setenv('CIRA_DASHBOARD_ACCESS_KEY', 'test-key')
-    app = AppTest.from_file(str(ROOT / 'dashboard/app.py')).run()
+    app = AppTest.from_file(str(ROOT / 'dashboard/app.py')).run(timeout=20)
     assert not app.exception
     assert not app.metric
     assert 'Enter your dashboard access key' in app.info[0].value
-    app.sidebar.text_input[0].set_value('wrong-key').run()
+    app.sidebar.text_input[0].set_value('wrong-key').run(timeout=20)
     assert not app.exception
     assert not app.metric

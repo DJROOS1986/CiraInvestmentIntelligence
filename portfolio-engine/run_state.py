@@ -9,7 +9,7 @@ import json
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-STATE = ROOT / "reports" / "run-exclusions.json"
+STATE = Path(__import__("os").environ.get("CIRA_RUN_STATE") or ROOT / "reports" / "run-exclusions.json")
 MAX_EXCLUDED_FRACTION = 0.10
 
 

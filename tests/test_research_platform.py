@@ -80,9 +80,10 @@ class Container:
 
 
 @pytest.fixture
-def research_root(tmp_path):
+def research_root(tmp_path, monkeypatch):
+    monkeypatch.setenv('CIRA_RUN_STATE', str(tmp_path / 'run-exclusions.json'))
     now = datetime.now(timezone.utc)
-    for ticker in ('AAPL', 'MSFT'):
+    for ticker in data_reader.TICKERS:
         history = prices(ticker)
         history['retrieved_at_utc'] = now.isoformat()
         for index, row in enumerate(history['records']):
@@ -111,7 +112,7 @@ def test_publish_read_and_tamper_detection(research_root, monkeypatch):
     container = Container()
     publisher.publish(manifest, path, payloads, container)
     loaded = data_reader.load_azure(container)
-    assert set(loaded['companies']) == {'AAPL', 'MSFT'}
+    assert set(loaded['companies']) == set(data_reader.TICKERS)
     assert len(loaded['prices']['AAPL']['records']) == 3
     company_path = manifest['reports'][0]['blob_path']
     container.blobs[company_path] = b'{}'
