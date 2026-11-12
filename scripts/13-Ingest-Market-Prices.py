@@ -92,6 +92,23 @@ def fetch_prices(symbol):
     return normalize_daily_prices(symbol, records)
 
 
+RETRY_WAITS_SECONDS = (3, 8)
+
+
+def fetch_with_retry(symbol):
+    """Yahoo occasionally refuses a valid symbol (HTTP 400/429/5xx); retry before excluding it."""
+    last_error = None
+    for attempt, wait in enumerate((0,) + RETRY_WAITS_SECONDS, start=1):
+        if wait:
+            print(f"Retrying {symbol} in {wait}s (attempt {attempt}): {last_error}")
+            __import__("time").sleep(wait)
+        try:
+            return fetch_prices(symbol)
+        except requests.RequestException as exc:
+            last_error = exc
+    raise last_error
+
+
 def main():
     OUTPUT.mkdir(parents=True, exist_ok=True)
     failures = []
@@ -101,7 +118,7 @@ def main():
         print(f"\nFetching {symbol}...")
 
         try:
-            prices = fetch_prices(symbol)
+            prices = fetch_with_retry(symbol)
 
             if not prices:
                 raise RuntimeError("No valid price records")
