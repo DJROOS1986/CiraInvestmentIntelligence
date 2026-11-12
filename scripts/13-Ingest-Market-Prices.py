@@ -16,6 +16,7 @@ from market_data import normalize_daily_prices
 
 SYMBOLS = list(__import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]())
 OUTPUT = ROOT / "reports" / "market-data"
+PRICE_REQUEST_PAUSE_SECONDS = 0.5  # gentle pacing for the Yahoo chart endpoint
 
 
 def fetch_prices(symbol):
@@ -96,6 +97,7 @@ def main():
     failures = []
 
     for symbol in SYMBOLS:
+        __import__("time").sleep(PRICE_REQUEST_PAUSE_SECONDS)
         print(f"\nFetching {symbol}...")
 
         try:

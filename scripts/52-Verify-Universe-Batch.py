@@ -25,6 +25,7 @@ from pathlib import Path
 import requests
 
 ROOT = Path(__file__).resolve().parents[1]
+MAX_FINANCIAL_AGE_DAYS = 550  # latest revenue fiscal year older than ~18 months = stale label (e.g. CPRT 2018)
 METHODOLOGY_FALLBACKS = {"ProfitLoss", "PaymentsToAcquireProductiveAssets"}  # shown as data-quality notes
 NOTE_ROWS = {  # identifier-master notes that belong in the dashboard's data-quality warnings
     "Amazon (AWS)": "AWS is a segment; figures are for all of Amazon",
@@ -108,9 +109,12 @@ def main():
             out["price"] = f"{len(closes)} closes {currency}" if closes else "NO PRICES"
 
             ok_form = out["form"].startswith("10-K")
+            from datetime import date
+            stale = (date.today() - date.fromisoformat(out["period"])).days > MAX_FINANCIAL_AGE_DAYS
             ok_price = bool(closes) and currency == "USD"
-            out["verdict"] = "READY" if ok_form and ok_price and not out["missing"] else (
-                "READY (gaps)" if ok_form and ok_price else "NOT READY")
+            out["verdict"] = ("NOT READY (stale financials)" if stale else
+                              "READY" if ok_form and ok_price and not out["missing"] else
+                              "READY (gaps)" if ok_form and ok_price else "NOT READY")
             if out["verdict"].startswith("READY"):
                 notes = [NOTE_ROWS[r["bcg_name"]]] if r["bcg_name"] in NOTE_ROWS else []
                 proposals.append({"ticker": ticker, "cik": cik, "sec_name": r["entity"], "bcg_name": r["bcg_name"],
@@ -118,7 +122,7 @@ def main():
         except Exception as exc:  # one company never stops the batch check
             out["verdict"] = f"ERROR: {type(exc).__name__}: {exc}"[:120]
         results.append(out)
-        print(f"{ticker:<6} {out['verdict']:<14} {out['form']:<16} FY {out['period']:<10} price {out['price']:<14} "
+        print(f"{ticker:<6} {out['verdict']:<28} {out['form']:<16} FY {out['period']:<10} price {out['price']:<14} "
               f"missing {','.join(out['missing']) or '-'}  fallbacks {','.join(out['fallbacks']) or '-'}")
 
     existing = sorted((ROOT / "research").glob("universe-batch-*.json"))

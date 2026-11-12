@@ -6,7 +6,7 @@ identifier master (category SEC_10K, same CIK), skips companies already in the u
   - config/identifiers.csv    in_universe = yes for the added tickers
 All-or-nothing: any mismatch stops before writing. Safe to rerun.
 
-Usage (repo root):  python scripts/53-Add-Universe-Batch.py research/universe-batch-1.json
+Usage (repo root):  python scripts/53-Add-Universe-Batch.py research/universe-batch-1.json [--exclude CPRT ...]
 """
 import csv
 import io
@@ -31,9 +31,17 @@ def render_universe(doc):
 
 
 def main():
-    if len(sys.argv) != 2:
-        sys.exit("Usage: python scripts/53-Add-Universe-Batch.py research/universe-batch-<n>.json")
-    proposal = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))["proposed_companies"]
+    args = sys.argv[1:]
+    exclude = set()
+    if "--exclude" in args:
+        i = args.index("--exclude")
+        exclude = {t.upper() for t in args[i + 1:]}
+        args = args[:i]
+    if len(args) != 1:
+        sys.exit("Usage: python scripts/53-Add-Universe-Batch.py research/universe-batch-<n>.json [--exclude T1 T2 ...]")
+    proposal = [c for c in json.loads(Path(args[0]).read_text(encoding="utf-8"))["proposed_companies"] if c["ticker"] not in exclude]
+    if exclude:
+        print("Excluded on request:", " ".join(sorted(exclude)))
     universe = json.loads(UNIVERSE.read_text(encoding="utf-8"))
     have = {c["ticker"] for c in universe["companies"]}
     raw = IDENTIFIERS.read_bytes().decode("utf-8")

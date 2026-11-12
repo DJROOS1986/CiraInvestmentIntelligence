@@ -1,0 +1,847 @@
+{
+  "proposed_companies": [
+    {
+      "ticker": "V",
+      "cik": "0001403161",
+      "sec_name": "VISA INC.",
+      "bcg_name": "Visa",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "WDC",
+      "cik": "0000106040",
+      "sec_name": "WESTERN DIGITAL CORP",
+      "bcg_name": "Western Digital",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "BSX",
+      "cik": "0000885725",
+      "sec_name": "BOSTON SCIENTIFIC CORP",
+      "bcg_name": "Boston Scientific",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "DELL",
+      "cik": "0001571996",
+      "sec_name": "Dell Technologies Inc.",
+      "bcg_name": "Dell Technologies",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "INTC",
+      "cik": "0000050863",
+      "sec_name": "INTEL CORP",
+      "bcg_name": "Intel",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "CEG",
+      "cik": "0001868275",
+      "sec_name": "Constellation Energy Corp",
+      "bcg_name": "Constellation Energy",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "MU",
+      "cik": "0000723125",
+      "sec_name": "MICRON TECHNOLOGY INC",
+      "bcg_name": "Micron Technology",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "JPM",
+      "cik": "0000019617",
+      "sec_name": "JPMORGAN CHASE & CO",
+      "bcg_name": "JPMorgan Chase",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "HPE",
+      "cik": "0001645590",
+      "sec_name": "Hewlett Packard Enterprise Co",
+      "bcg_name": "Hewlett Packard Enterprise",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "RBLX",
+      "cik": "0001315098",
+      "sec_name": "Roblox Corp",
+      "bcg_name": "Roblox Corporation",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "AMC",
+      "cik": "0001411579",
+      "sec_name": "AMC ENTERTAINMENT HOLDINGS, INC.",
+      "bcg_name": "AMC Entertainment",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "ACHR",
+      "cik": "0001824502",
+      "sec_name": "Archer Aviation Inc.",
+      "bcg_name": "Archer Aviation",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "AGX",
+      "cik": "0000100591",
+      "sec_name": "ARGAN INC",
+      "bcg_name": "Argan Inc.",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "CME",
+      "cik": "0001156375",
+      "sec_name": "CME GROUP INC.",
+      "bcg_name": "CME Group",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "CLS",
+      "cik": "0001030894",
+      "sec_name": "CELESTICA INC",
+      "bcg_name": "Celestica",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "CIFR",
+      "cik": "0001819989",
+      "sec_name": "Cipher Digital Inc.",
+      "bcg_name": "Cipher Digital",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "CRCL",
+      "cik": "0001876042",
+      "sec_name": "Circle Internet Group, Inc.",
+      "bcg_name": "Circle Internet Group",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "COHR",
+      "cik": "0000820318",
+      "sec_name": "Coherent",
+      "bcg_name": "Coherent / Lumentum",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": [
+        "BCG row combines Coherent and Lumentum; this entry is Coherent only"
+      ]
+    },
+    {
+      "ticker": "CPRT",
+      "cik": "0000900075",
+      "sec_name": "COPART INC",
+      "bcg_name": "Copart",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "CRWV",
+      "cik": "0001769628",
+      "sec_name": "CoreWeave, Inc.",
+      "bcg_name": "CoreWeave",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "COST",
+      "cik": "0000909832",
+      "sec_name": "COSTCO WHOLESALE CORP /NEW",
+      "bcg_name": "Costco Wholesale",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "DUOL",
+      "cik": "0001562088",
+      "sec_name": "Duolingo, Inc.",
+      "bcg_name": "Duolingo",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "ETN",
+      "cik": "0001551182",
+      "sec_name": "Eaton Corp plc",
+      "bcg_name": "Eaton Corporation",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "FICO",
+      "cik": "0000814547",
+      "sec_name": "FAIR ISAAC CORP",
+      "bcg_name": "Fair Isaac (FICO)",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "GEV",
+      "cik": "0001996810",
+      "sec_name": "GE Vernova Inc.",
+      "bcg_name": "GE Vernova (SMR/BWRX-300)",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "HIVE",
+      "cik": "0001720424",
+      "sec_name": "HIVE Digital Technologies Ltd.",
+      "bcg_name": "HIVE Digital Technologies",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "IDXX",
+      "cik": "0000874716",
+      "sec_name": "IDEXX LABORATORIES INC /DE",
+      "bcg_name": "IDEXX Laboratories",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "IREN",
+      "cik": "0001878848",
+      "sec_name": "IREN Ltd",
+      "bcg_name": "IREN Limited",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "MELI",
+      "cik": "0001099590",
+      "sec_name": "MERCADOLIBRE INC",
+      "bcg_name": "MercadoLibre",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "MPWR",
+      "cik": "0001280452",
+      "sec_name": "MONOLITHIC POWER SYSTEMS, INC.",
+      "bcg_name": "Monolithic Power Systems",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "PLTR",
+      "cik": "0001321655",
+      "sec_name": "Palantir Technologies Inc.",
+      "bcg_name": "Palantir Technologies",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "HOOD",
+      "cik": "0001783879",
+      "sec_name": "Robinhood Markets, Inc.",
+      "bcg_name": "Robinhood Markets",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "RSI",
+      "cik": "0001793659",
+      "sec_name": "Rush Street Interactive, Inc.",
+      "bcg_name": "Rush Street Interactive",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "IOT",
+      "cik": "0001642896",
+      "sec_name": "Samsara Inc.",
+      "bcg_name": "Samsara Inc.",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "SNDK",
+      "cik": "0002023554",
+      "sec_name": "Sandisk Corp",
+      "bcg_name": "SanDisk",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "TW",
+      "cik": "0001758730",
+      "sec_name": "Tradeweb Markets Inc.",
+      "bcg_name": "Tradeweb Markets",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "TDG",
+      "cik": "0001260221",
+      "sec_name": "TransDigm Group INC",
+      "bcg_name": "TransDigm Group",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "VRSK",
+      "cik": "0001442145",
+      "sec_name": "Verisk Analytics, Inc.",
+      "bcg_name": "Verisk Analytics",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "VRT",
+      "cik": "0001674101",
+      "sec_name": "Vertiv Holdings Co",
+      "bcg_name": "Vertiv Holdings",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "ELF",
+      "cik": "0001600033",
+      "sec_name": "e.l.f. Beauty, Inc.",
+      "bcg_name": "e.l.f. Beauty",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    }
+  ],
+  "checks": [
+    {
+      "ticker": "V",
+      "bcg_name": "Visa",
+      "star": "68",
+      "form": "10-K 2026-11-05",
+      "period": "2026-09-30",
+      "missing": [],
+      "fallbacks": [
+        "capital_expenditure=PaymentsToAcquireProductiveAssets"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "WDC",
+      "bcg_name": "Western Digital",
+      "star": "68",
+      "form": "10-K 2026-08-14",
+      "period": "2026-07-03",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "BSX",
+      "bcg_name": "Boston Scientific",
+      "star": "66",
+      "form": "10-K 2026-02-17",
+      "period": "2025-12-31",
+      "missing": [
+        "total_liabilities"
+      ],
+      "fallbacks": [
+        "net_income=ProfitLoss"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY (gaps)"
+    },
+    {
+      "ticker": "DELL",
+      "bcg_name": "Dell Technologies",
+      "star": "62",
+      "form": "10-K 2026-03-16",
+      "period": "2026-01-30",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "INTC",
+      "bcg_name": "Intel",
+      "star": "62",
+      "form": "10-K 2026-01-23",
+      "period": "2025-12-27",
+      "missing": [
+        "total_liabilities"
+      ],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY (gaps)"
+    },
+    {
+      "ticker": "CEG",
+      "bcg_name": "Constellation Energy",
+      "star": "60",
+      "form": "10-K 2026-02-24",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "MU",
+      "bcg_name": "Micron Technology",
+      "star": "58",
+      "form": "10-K 2026-10-09",
+      "period": "2026-09-03",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "JPM",
+      "bcg_name": "JPMorgan Chase",
+      "star": "55",
+      "form": "10-K 2026-02-13",
+      "period": "2025-12-31",
+      "missing": [
+        "capital_expenditure"
+      ],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY (gaps)"
+    },
+    {
+      "ticker": "HPE",
+      "bcg_name": "Hewlett Packard Enterprise",
+      "star": "52",
+      "form": "10-K 2025-12-18",
+      "period": "2025-10-31",
+      "missing": [
+        "total_liabilities"
+      ],
+      "fallbacks": [
+        "capital_expenditure=PaymentsToAcquireProductiveAssets"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY (gaps)"
+    },
+    {
+      "ticker": "RBLX",
+      "bcg_name": "Roblox Corporation",
+      "star": "48",
+      "form": "10-K 2026-02-11",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "AMC",
+      "bcg_name": "AMC Entertainment",
+      "star": "",
+      "form": "10-K 2026-02-23",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [
+        "capital_expenditure=PaymentsToAcquireProductiveAssets"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "ACHR",
+      "bcg_name": "Archer Aviation",
+      "star": "",
+      "form": "10-K 2026-03-02",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "AGX",
+      "bcg_name": "Argan Inc.",
+      "star": "",
+      "form": "10-K 2026-03-26",
+      "period": "2026-01-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CME",
+      "bcg_name": "CME Group",
+      "star": "",
+      "form": "10-K 2026-02-26",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CLS",
+      "bcg_name": "Celestica",
+      "star": "",
+      "form": "10-K 2026-02-27",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [
+        "capital_expenditure=PaymentsToAcquireProductiveAssets"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CIFR",
+      "bcg_name": "Cipher Digital",
+      "star": "",
+      "form": "10-K 2026-02-24",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CRCL",
+      "bcg_name": "Circle Internet Group",
+      "star": "",
+      "form": "10-K 2026-03-09",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "COHR",
+      "bcg_name": "Coherent / Lumentum",
+      "star": "",
+      "form": "10-K 2026-08-14",
+      "period": "2026-06-30",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CPRT",
+      "bcg_name": "Copart",
+      "star": "",
+      "form": "10-K 2026-09-29",
+      "period": "2018-07-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CRWV",
+      "bcg_name": "CoreWeave",
+      "star": "",
+      "form": "10-K 2026-03-02",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "COST",
+      "bcg_name": "Costco Wholesale",
+      "star": "",
+      "form": "10-K 2026-10-07",
+      "period": "2026-08-30",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CRWD",
+      "bcg_name": "CrowdStrike",
+      "star": "",
+      "form": "10-K 2026-03-05",
+      "period": "",
+      "missing": [],
+      "fallbacks": [],
+      "price": "",
+      "verdict": "ERROR: ValueError: No annual revenue period found"
+    },
+    {
+      "ticker": "DUOL",
+      "bcg_name": "Duolingo",
+      "star": "",
+      "form": "10-K 2026-02-27",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "ETN",
+      "bcg_name": "Eaton Corporation",
+      "star": "",
+      "form": "10-K 2026-02-26",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [
+        "total_liabilities=derived: LiabilitiesCurrent + LiabilitiesNoncurrent"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "FICO",
+      "bcg_name": "Fair Isaac (FICO)",
+      "star": "",
+      "form": "10-K 2026-11-06",
+      "period": "2026-09-30",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "GEV",
+      "bcg_name": "GE Vernova (SMR/BWRX-300)",
+      "star": "",
+      "form": "10-K 2026-01-29",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [
+        "capital_expenditure=PaymentsToAcquireProductiveAssets"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "HIVE",
+      "bcg_name": "HIVE Digital Technologies",
+      "star": "",
+      "form": "10-K 2026-06-02",
+      "period": "2026-03-31",
+      "missing": [
+        "capital_expenditure"
+      ],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY (gaps)"
+    },
+    {
+      "ticker": "IDXX",
+      "bcg_name": "IDEXX Laboratories",
+      "star": "",
+      "form": "10-K 2026-02-20",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "IREN",
+      "bcg_name": "IREN Limited",
+      "star": "",
+      "form": "10-K 2026-08-27",
+      "period": "2026-06-30",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "MELI",
+      "bcg_name": "MercadoLibre",
+      "star": "",
+      "form": "10-K 2026-02-25",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [
+        "capital_expenditure=PaymentsToAcquireProductiveAssets"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "MPWR",
+      "bcg_name": "Monolithic Power Systems",
+      "star": "",
+      "form": "10-K 2026-02-27",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "PLTR",
+      "bcg_name": "Palantir Technologies",
+      "star": "",
+      "form": "10-K 2026-02-17",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "HOOD",
+      "bcg_name": "Robinhood Markets",
+      "star": "",
+      "form": "10-K 2026-02-18",
+      "period": "2025-12-31",
+      "missing": [
+        "capital_expenditure"
+      ],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY (gaps)"
+    },
+    {
+      "ticker": "RSI",
+      "bcg_name": "Rush Street Interactive",
+      "star": "",
+      "form": "10-K 2026-02-18",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "IOT",
+      "bcg_name": "Samsara Inc.",
+      "star": "",
+      "form": "10-K 2026-03-16",
+      "period": "2026-01-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "SNDK",
+      "bcg_name": "SanDisk",
+      "star": "",
+      "form": "10-K 2026-08-17",
+      "period": "2026-07-03",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "TW",
+      "bcg_name": "Tradeweb Markets",
+      "star": "",
+      "form": "10-K 2026-02-05",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "TDG",
+      "bcg_name": "TransDigm Group",
+      "star": "",
+      "form": "10-K 2026-11-10",
+      "period": "2026-09-30",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "VRSK",
+      "bcg_name": "Verisk Analytics",
+      "star": "",
+      "form": "10-K 2026-02-18",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "VRT",
+      "bcg_name": "Vertiv Holdings",
+      "star": "",
+      "form": "10-K 2026-02-13",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "ELF",
+      "bcg_name": "e.l.f. Beauty",
+      "star": "",
+      "form": "10-K 2026-05-21",
+      "period": "2026-03-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    }
+  ]
+}
