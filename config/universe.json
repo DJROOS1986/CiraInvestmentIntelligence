@@ -67,6 +67,8 @@
     {"ticker": "TDG", "cik": "0001260221", "sec_name": "TransDigm Group INC", "bcg_name": "TransDigm Group", "bcg_required": true, "annual_form": "10-K", "notes": []},
     {"ticker": "VRSK", "cik": "0001442145", "sec_name": "Verisk Analytics, Inc.", "bcg_name": "Verisk Analytics", "bcg_required": true, "annual_form": "10-K", "notes": []},
     {"ticker": "VRT", "cik": "0001674101", "sec_name": "Vertiv Holdings Co", "bcg_name": "Vertiv Holdings", "bcg_required": true, "annual_form": "10-K", "notes": []},
-    {"ticker": "ELF", "cik": "0001600033", "sec_name": "e.l.f. Beauty, Inc.", "bcg_name": "e.l.f. Beauty", "bcg_required": true, "annual_form": "10-K", "notes": []}
+    {"ticker": "ELF", "cik": "0001600033", "sec_name": "e.l.f. Beauty, Inc.", "bcg_name": "e.l.f. Beauty", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "CPRT", "cik": "0000900075", "sec_name": "COPART INC", "bcg_name": "Copart", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "CRWD", "cik": "0001535527", "sec_name": "CrowdStrike Holdings, Inc.", "bcg_name": "CrowdStrike", "bcg_required": true, "annual_form": "10-K", "notes": []}
   ]
 }

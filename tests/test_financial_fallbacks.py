@@ -87,3 +87,20 @@ class FallbackTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_revenue_fallback_including_assessed_tax():  # Copart FY2026: only this label after 2018
+    facts = {k: v for k, v in BASE.items() if k != "RevenueFromContractWithCustomerExcludingAssessedTax"}
+    facts["Revenues"] = {"USD": [{"val": 1_805_700_000, "start": "2017-08-01", "end": "2018-07-31",
+                                  "form": "10-K", "fp": "FY", "filed": "2018-10-01", "accn": "old"}]}
+    facts["RevenueFromContractWithCustomerIncludingAssessedTax"] = duration(4_666_200_000)
+    result = run(facts)
+    assert result["period_end"] == END
+    assert result["metrics_usd"]["revenue"] == 4_666_200_000
+    assert result["provenance"]["revenue"]["tag"] == "RevenueFromContractWithCustomerIncludingAssessedTax"
+
+
+def test_excluding_tax_label_still_preferred():
+    facts = {**BASE, "RevenueFromContractWithCustomerIncludingAssessedTax": duration(9_999)}
+    result = run(facts)
+    assert result["provenance"]["revenue"]["tag"] == "RevenueFromContractWithCustomerExcludingAssessedTax"

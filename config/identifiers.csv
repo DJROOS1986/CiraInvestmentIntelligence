@@ -90,10 +90,10 @@ China Merchants Bank,China Merchants Bank,PROVIDER,,,,,,no,pending_home_listing,
 Cipher Digital,Cipher Digital Inc.,SEC_10K,CIFR,US,CIFR,0001819989,10-K 2026-02-24,yes,verified,Servers & data-center infrastructure,,Not scored,,
 Circle Internet Group,"Circle Internet Group, Inc.",SEC_10K,CRCL,US,CRCL,0001876042,10-K 2026-03-09,yes,verified,Other (outside the AI chain),,Not scored,,
 Coherent / Lumentum,Coherent,SEC_10K,COHR,US,COHR,0000820318,10-K 2026-08-14,yes,verified,Optical & networking,,Not scored,,Row mapped to Coherent only; Lumentum has its own row
-Copart,COPART INC,SEC_10K,CPRT,US,CPRT,0000900075,10-K 2026-09-29,no,verified,Other (outside the AI chain),,Not scored,,
+Copart,COPART INC,SEC_10K,CPRT,US,CPRT,0000900075,10-K 2026-09-29,yes,verified,Other (outside the AI chain),,Not scored,,
 CoreWeave,"CoreWeave, Inc.",SEC_10K,CRWV,US,CRWV,0001769628,10-K 2026-03-02,yes,verified,Servers & data-center infrastructure,,Not scored,,
 Costco Wholesale,COSTCO WHOLESALE CORP /NEW,SEC_10K,COST,US,COST,0000909832,10-K 2026-10-07,yes,verified,Other (outside the AI chain),,Not scored,,
-CrowdStrike,"CrowdStrike Holdings, Inc.",SEC_10K,CRWD,US,CRWD,0001535527,10-K 2026-03-05,no,verified,Cloud & software,,Not scored,,
+CrowdStrike,"CrowdStrike Holdings, Inc.",SEC_10K,CRWD,US,CRWD,0001535527,10-K 2026-03-05,yes,verified,Cloud & software,,Not scored,,
 DBS Group,DBS Group,PROVIDER,,,,,,no,pending_home_listing,Other (outside the AI chain),,Not scored,DBS@ER DBS GROUP HOLDINGS LTD [BBG024YT8FR7] | DBS@SP DBS GROUP HOLDINGS LTD [BBG000BFDGH5] | DBS1USD@EP DBS GROUP HOLDINGS LTD [BBG00W7F0F77] | DBS1USD@XO DBS GROUP HOLDINGS LTD [BBG00W7F0FC1] | DBSDF@PQ DBS GROUP HOLDINGS LTD [BBG000BSN1W2],
 Delta Electronics (Infra),Delta Electronics,PROVIDER,2308,TT,,,,no,to_verify,Servers & data-center infrastructure,,Not scored,2308TWD@XV DELTA ELECTRONICS INC [BBG00JSDZ607] | 2308TWD@EU DELTA ELECTRONICS INC [BBG00JSDZ6W2] | 2308TWD@XS DELTA ELECTRONICS INC [BBG00JSDZ607] | 2308TWD@XW DELTA ELECTRONICS INC [BBG00JSDZ607] | 2308TWD@XX DELTA ELECTRONICS INC [BBG00JSDZ607],Same company as Delta Electronics (Power)
 Delta Electronics (Power),Delta Electronics,PROVIDER,2308,TT,,,,no,to_verify,Servers & data-center infrastructure,,Not scored,2308TWD@XV DELTA ELECTRONICS INC [BBG00JSDZ607] | 2308TWD@EU DELTA ELECTRONICS INC [BBG00JSDZ6W2] | 2308TWD@XS DELTA ELECTRONICS INC [BBG00JSDZ607] | 2308TWD@XW DELTA ELECTRONICS INC [BBG00JSDZ607] | 2308TWD@XX DELTA ELECTRONICS INC [BBG00JSDZ607],Same company as Delta Electronics (Infra)

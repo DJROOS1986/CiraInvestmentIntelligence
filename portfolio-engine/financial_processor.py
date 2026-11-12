@@ -7,6 +7,7 @@ TAGS = {
         "RevenueFromContractWithCustomerExcludingAssessedTax",
         "Revenues",
         "SalesRevenueNet",
+        "RevenueFromContractWithCustomerIncludingAssessedTax",
     ],
     "net_income": ["NetIncomeLoss", "ProfitLoss"],
     "total_assets": ["Assets"],

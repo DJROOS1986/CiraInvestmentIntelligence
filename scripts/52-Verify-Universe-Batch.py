@@ -26,7 +26,7 @@ import requests
 
 ROOT = Path(__file__).resolve().parents[1]
 MAX_FINANCIAL_AGE_DAYS = 550  # latest revenue fiscal year older than ~18 months = stale label (e.g. CPRT 2018)
-METHODOLOGY_FALLBACKS = {"ProfitLoss", "PaymentsToAcquireProductiveAssets"}  # shown as data-quality notes
+METHODOLOGY_FALLBACKS = {"ProfitLoss", "PaymentsToAcquireProductiveAssets", "RevenueFromContractWithCustomerIncludingAssessedTax"}  # shown as data-quality notes
 NOTE_ROWS = {  # identifier-master notes that belong in the dashboard's data-quality warnings
     "Amazon (AWS)": "AWS is a segment; figures are for all of Amazon",
     "Coherent / Lumentum": "BCG row combines Coherent and Lumentum; this entry is Coherent only",

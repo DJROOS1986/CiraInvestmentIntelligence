@@ -23,6 +23,7 @@ def optional_number(value, label):
 FALLBACK_TAG_WARNINGS = {
     'ProfitLoss': 'Net income uses ProfitLoss (includes non-controlling interests) because NetIncomeLoss is not reported',
     'PaymentsToAcquireProductiveAssets': 'Capital expenditure uses PaymentsToAcquireProductiveAssets (may include some intangible assets)',
+    'RevenueFromContractWithCustomerIncludingAssessedTax': 'Revenue uses RevenueFromContractWithCustomerIncludingAssessedTax (may include sales taxes collected from customers)',
 }
 
 

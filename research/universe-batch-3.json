@@ -1,0 +1,50 @@
+{
+  "proposed_companies": [
+    {
+      "ticker": "CPRT",
+      "cik": "0000900075",
+      "sec_name": "COPART INC",
+      "bcg_name": "Copart",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    },
+    {
+      "ticker": "CRWD",
+      "cik": "0001535527",
+      "sec_name": "CrowdStrike Holdings, Inc.",
+      "bcg_name": "CrowdStrike",
+      "bcg_required": true,
+      "annual_form": "10-K",
+      "notes": []
+    }
+  ],
+  "checks": [
+    {
+      "ticker": "CPRT",
+      "bcg_name": "Copart",
+      "star": "",
+      "form": "10-K 2026-09-29",
+      "period": "2026-07-31",
+      "missing": [],
+      "fallbacks": [
+        "revenue=RevenueFromContractWithCustomerIncludingAssessedTax"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CRWD",
+      "bcg_name": "CrowdStrike",
+      "star": "",
+      "form": "10-K 2026-03-05",
+      "period": "2026-01-31",
+      "missing": [],
+      "fallbacks": [
+        "revenue=RevenueFromContractWithCustomerIncludingAssessedTax"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    }
+  ]
+}
