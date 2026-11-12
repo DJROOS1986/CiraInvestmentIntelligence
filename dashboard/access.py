@@ -3,7 +3,7 @@
 Azure Container Apps built-in authentication (Entra ID) signs the user in before any request
 reaches Streamlit and forwards the signed-in identity in the X-MS-CLIENT-PRINCIPAL-ID header.
 The dashboard accepts that identity only when it equals the single allowed object ID
-(CIRA_ALLOWED_PRINCIPAL_ID, set by Terraform). Anything else falls back to the access key.
+(CIRA_ALLOWED_PRINCIPAL_ID, set by Terraform). Anything else is denied (no access-key fallback).
 """
 import hmac
 

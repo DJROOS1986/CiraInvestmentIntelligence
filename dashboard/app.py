@@ -47,7 +47,6 @@ if st.sidebar.button('Refresh reports'):
 st.caption(f'RESEARCH WORKSPACE / {len(TICKERS)} COMPANIES')
 st.title(view)
 st.write('Financial fundamentals, historical market context, and transparent data quality.')
-required_key = os.environ.get('CIRA_DASHBOARD_ACCESS_KEY')
 try:
     request_headers = st.context.headers
 except Exception:
@@ -55,13 +54,8 @@ except Exception:
 entra_ok = entra_allowed(request_headers, os.environ.get('CIRA_ALLOWED_PRINCIPAL_ID'))
 if entra_ok:
     st.sidebar.caption('Signed in with Microsoft Entra ID')
-if required_key and not entra_ok:
-    supplied = st.sidebar.text_input('Access key', type='password')
-    if not hmac.compare_digest(supplied, required_key):
-        st.info('Enter your dashboard access key to open the research workspace.')
-        st.stop()
-if os.environ.get('CIRA_STORAGE_ACCOUNT') and not required_key and not entra_ok:
-    st.error('Dashboard access protection is not configured.')
+elif os.environ.get('CIRA_STORAGE_ACCOUNT'):
+    st.error('Access denied. Sign in with the authorised Microsoft Entra ID account.')
     st.stop()
 try:
     data = dataset()

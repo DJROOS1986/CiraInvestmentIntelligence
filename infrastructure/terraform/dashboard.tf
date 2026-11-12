@@ -22,11 +22,6 @@ resource "azurerm_role_assignment" "dashboard_acr_pull" {
   principal_id         = azurerm_user_assigned_identity.dashboard.principal_id
 }
 
-resource "random_password" "dashboard_access" {
-  length  = 48
-  special = false
-}
-
 resource "azurerm_container_app" "dashboard" {
   name                         = "ca-cira-dashboard-${var.environment}"
   resource_group_name          = azurerm_resource_group.main.name
@@ -43,11 +38,6 @@ resource "azurerm_container_app" "dashboard" {
   registry {
     server   = azurerm_container_registry.cira.login_server
     identity = azurerm_user_assigned_identity.dashboard.id
-  }
-
-  secret {
-    name  = "dashboard-access-key"
-    value = random_password.dashboard_access.result
   }
 
   ingress {
@@ -80,10 +70,6 @@ resource "azurerm_container_app" "dashboard" {
       env {
         name  = "CIRA_REPORTS_CONTAINER"
         value = "reports"
-      }
-      env {
-        name        = "CIRA_DASHBOARD_ACCESS_KEY"
-        secret_name = "dashboard-access-key"
       }
       env {
         name  = "STREAMLIT_THEME_BASE"
@@ -125,9 +111,4 @@ resource "azurerm_container_app" "dashboard" {
 
 output "dashboard_url" {
   value = "https://${azurerm_container_app.dashboard.ingress[0].fqdn}"
-}
-
-output "dashboard_access_key" {
-  value     = random_password.dashboard_access.result
-  sensitive = true
 }

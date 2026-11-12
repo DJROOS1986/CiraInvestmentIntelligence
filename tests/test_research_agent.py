@@ -54,14 +54,13 @@ def test_ai_endpoint_rejected_before_credentials(report):
         agent.select_highlights(report, 'http://attacker.example', 'research', None)
 
 
-def test_hosted_dashboard_requires_access_key(monkeypatch):
+def test_hosted_dashboard_denies_without_entra(monkeypatch):
     from streamlit.testing.v1 import AppTest
     monkeypatch.setenv('CIRA_STORAGE_ACCOUNT', 'account')
-    monkeypatch.setenv('CIRA_DASHBOARD_ACCESS_KEY', 'test-key')
+    monkeypatch.setenv('CIRA_ALLOWED_PRINCIPAL_ID', '00000000-0000-0000-0000-000000000001')
+    monkeypatch.setenv('CIRA_DASHBOARD_ACCESS_KEY', 'test-key')  # a leftover key must not open anything
     app = AppTest.from_file(str(ROOT / 'dashboard/app.py')).run(timeout=20)
     assert not app.exception
     assert not app.metric
-    assert 'Enter your dashboard access key' in app.info[0].value
-    app.sidebar.text_input[0].set_value('wrong-key').run(timeout=20)
-    assert not app.exception
-    assert not app.metric
+    assert not app.sidebar.text_input
+    assert 'Access denied' in app.error[0].value
