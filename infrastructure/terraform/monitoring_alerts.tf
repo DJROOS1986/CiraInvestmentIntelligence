@@ -3,6 +3,7 @@
 # Signals come from the job's own console output in Log Analytics (ContainerAppConsoleLogs_CL):
 #   - "CIRA CLOUD PIPELINE FAILED"       printed by scripts/12-Run-Cloud-Pipeline.py on any unhandled error
 #   - "CIRA CLOUD PIPELINE: SUCCESS"     printed only after a complete batch has been published
+#   - "CIRA COMPANY FAILED"              printed when one company is excluded but the batch still publishes
 #
 # The action group ag-cira-failures-<env> was created outside Terraform. It is REFERENCED here
 # (data source), not managed, so Terraform will never modify or delete it.
@@ -80,6 +81,44 @@ resource "azurerm_monitor_scheduled_query_rules_alert_v2" "cira_pipeline_silent"
     time_aggregation_method = "Count"
     operator                = "LessThan"
     threshold               = 1
+
+    failing_periods {
+      minimum_failing_periods_to_trigger_alert = 1
+      number_of_evaluation_periods             = 1
+    }
+  }
+
+  action {
+    action_groups = [data.azurerm_monitor_action_group.cira_failures.id]
+  }
+
+  tags = local.common_tags
+}
+
+# Partial batch: one company failed a stage and was excluded; the batch still published without it.
+# More than 10% excluded fails the whole run instead (caught by cira_pipeline_failed).
+resource "azurerm_monitor_scheduled_query_rules_alert_v2" "cira_company_failed" {
+  name                    = "alert-cira-company-failed-${var.environment}"
+  display_name            = "CIRA company excluded from batch (${var.environment})"
+  description             = "A company failed a pipeline stage (CIRA COMPANY FAILED) and is missing from the published batch. The log line names the ticker, stage and reason."
+  resource_group_name     = azurerm_resource_group.main.name
+  location                = data.azurerm_log_analytics_workspace.cira.location
+  scopes                  = [data.azurerm_log_analytics_workspace.cira.id]
+  severity                = 3
+  enabled                 = true
+  evaluation_frequency    = "PT15M"
+  window_duration         = "PT30M"
+  auto_mitigation_enabled = true
+
+  criteria {
+    query                   = <<-KQL
+      ContainerAppConsoleLogs_CL
+      | where ContainerJobName_s == "${azurerm_container_app_job.cira.name}"
+      | where Log_s contains "CIRA COMPANY FAILED"
+    KQL
+    time_aggregation_method = "Count"
+    operator                = "GreaterThan"
+    threshold               = 0
 
     failing_periods {
       minimum_failing_periods_to_trigger_alert = 1
