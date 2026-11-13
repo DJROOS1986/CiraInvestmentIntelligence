@@ -133,13 +133,13 @@ def main():
                                  headers={"User-Agent": "Mozilla/5.0 CIRA-Development/1.0", "Accept": "application/json"}).json()
             result_chart = (chart.get("chart", {}).get("result") or [{}])[0]
             closes = [c for c in (result_chart.get("indicators", {}).get("quote") or [{}])[0].get("close", []) if c is not None]
-            currency = result_chart.get("meta", {}).get("currency")
-            out["price"] = f"{len(closes)} closes {currency}" if closes else "NO PRICES"
+            price_currency = result_chart.get("meta", {}).get("currency")
+            out["price"] = f"{len(closes)} closes {price_currency}" if closes else "NO PRICES"
 
             ok_form = out["form"].startswith(("10-K", "20-F"))
             from datetime import date
             stale = (date.today() - date.fromisoformat(out["period"])).days > MAX_FINANCIAL_AGE_DAYS
-            ok_price = bool(closes) and currency == "USD"
+            ok_price = bool(closes) and price_currency == "USD"
             out["verdict"] = ("NOT READY (stale financials)" if stale else
                               "READY" if ok_form and ok_price and not out["missing"] else
                               "READY (gaps)" if ok_form and ok_price else "NOT READY")

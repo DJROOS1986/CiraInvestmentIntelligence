@@ -32,6 +32,16 @@ def _fx_args(ticker):
     return {"currency": currency, "fx": _FX}
 
 
+MAX_FINANCIAL_AGE_DAYS = 550  # newest fiscal year older than ~18 months = stale (wrong label or currency)
+
+
+def _check_fresh(result):
+    from datetime import date
+    age = (date.today() - date.fromisoformat(result["period_end"])).days
+    if age > MAX_FINANCIAL_AGE_DAYS:
+        raise ValueError(f"Stale financials: newest fiscal year ends {result['period_end']} ({age} days ago)")
+
+
 def main():
     sources = {}
 
@@ -49,6 +59,7 @@ def main():
     for ticker, source in sources.items():
         try:
             result = module.extract_annual_metrics(source, **_fx_args(ticker))
+            _check_fresh(result)  # stale guard
         except Exception as exc:  # per-company: exclude and continue
             __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["exclude"](ticker, "financial-report", exc)
             continue

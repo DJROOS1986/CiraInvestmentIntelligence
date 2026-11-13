@@ -74,11 +74,11 @@
     {"ticker": "CAMT", "cik": "0001109138", "sec_name": "CAMTEK LTD", "bcg_name": "Camtek", "bcg_required": true, "annual_form": "20-F", "notes": []},
     {"ticker": "NVMI", "cik": "0001109345", "sec_name": "NOVA LTD.", "bcg_name": "Nova Ltd", "bcg_required": true, "annual_form": "20-F", "notes": []},
     {"ticker": "SE", "cik": "0001703399", "sec_name": "Sea Ltd", "bcg_name": "Sea Limited", "bcg_required": true, "annual_form": "20-F", "notes": []},
-    {"ticker": "ASML", "cik": "0000937966", "sec_name": "ASML HOLDING NV", "bcg_name": "ASML Holding", "bcg_required": true, "annual_form": "20-F", "reporting_currency": "USD", "notes": []},
+    {"ticker": "ASML", "cik": "0000937966", "sec_name": "ASML HOLDING NV", "bcg_name": "ASML Holding", "bcg_required": true, "annual_form": "20-F", "reporting_currency": "EUR", "notes": []},
     {"ticker": "BABA", "cik": "0001577552", "sec_name": "Alibaba Group Holding Ltd", "bcg_name": "Alibaba Group", "bcg_required": true, "annual_form": "20-F", "reporting_currency": "CNY", "notes": []},
     {"ticker": "TCOM", "cik": "0001269238", "sec_name": "Trip.com Group Ltd", "bcg_name": "Trip.com Group", "bcg_required": true, "annual_form": "20-F", "reporting_currency": "CNY", "notes": []},
     {"ticker": "HSAI", "cik": "0001861737", "sec_name": "Hesai Group", "bcg_name": "Hesai Group", "bcg_required": true, "annual_form": "20-F", "reporting_currency": "CNY", "notes": []},
     {"ticker": "YMM", "cik": "0001838413", "sec_name": "Full Truck Alliance Co. Ltd.", "bcg_name": "Full Truck Alliance", "bcg_required": true, "annual_form": "20-F", "reporting_currency": "CNY", "notes": []},
-    {"ticker": "XPEV", "cik": "0001810997", "sec_name": "XPENG INC.", "bcg_name": "XPENG INC.", "bcg_required": true, "annual_form": "20-F", "reporting_currency": "USD", "notes": []}
+    {"ticker": "XPEV", "cik": "0001810997", "sec_name": "XPENG INC.", "bcg_name": "XPENG INC.", "bcg_required": true, "annual_form": "20-F", "reporting_currency": "CNY", "notes": []}
   ]
 }
