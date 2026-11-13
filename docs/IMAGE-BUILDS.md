@@ -30,3 +30,4 @@ Every image built with scripts/37-Build-CIRA-Image.ps1. Tag = <kind>-<yyyyMMdd U
 | 2026-11-13 16:06 | dashboard | `cira-dashboard:dashboard-20261113-8cffcb6` | Dockerfile.dashboard | 8cffcb6 |
 | 2026-11-13 16:14 | research | `cira-financial-intelligence:research-20261113-d52cdba` | Dockerfile.phase5 | d52cdba |
 | 2026-11-13 16:58 | dashboard | `cira-dashboard:dashboard-20261113-d2b2b3a` | Dockerfile.dashboard | d2b2b3a |
+| 2026-11-13 17:04 | research | `cira-financial-intelligence:research-20261113-4c18b8c` | Dockerfile.phase5 | 4c18b8c |
