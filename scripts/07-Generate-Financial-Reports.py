@@ -60,6 +60,13 @@ def main():
         try:
             result = module.extract_annual_metrics(source, **_fx_args(ticker))
             _check_fresh(result)  # stale guard
+            result['source'].update({
+                'source_file': source.relative_to(ROOT).as_posix(),
+                'snapshot_written_at_utc': datetime.fromtimestamp(
+                    source.stat().st_mtime, timezone.utc).isoformat(),
+                'retrieved_at_utc': None,
+                'timestamp_note': 'Filesystem snapshot time; exact SEC retrieval time was not recorded',
+            })
         except Exception as exc:  # per-company: exclude and continue
             __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["exclude"](ticker, "financial-report", exc)
             continue

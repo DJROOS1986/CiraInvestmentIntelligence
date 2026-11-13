@@ -11,7 +11,8 @@ import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from data import TICKERS, freshness, load_azure, load_local
+from data import TICKERS, freshness, load_azure, load_local, research_disclosures, financial_provenance_rows
+
 from access import entra_allowed
 
 st.set_page_config(page_title='CIRA | Research workspace', page_icon='◈', layout='wide')
@@ -83,17 +84,36 @@ if view == 'Company research':
             ['B', 'B', 'B', '']):
         display = 'Unavailable'
         if value is not None:
-            display = f'${value / 1e9:,.2f}B' if unit else f'${value:,.2f}'
+            currency = report['financial'].get('currency', 'USD') if unit else report['market'].get('currency', 'Unknown currency')
+            prefix = '$' if currency == 'USD' else currency + ' '
+            display = f'{prefix}{value / 1e9:,.2f}B' if unit else f'{prefix}{value:,.2f}'
         column.metric(label, display)
     history = pd.DataFrame(data['prices'][ticker]['records'])
     st.subheader('Historical closing prices')
     st.altair_chart(alt.Chart(history).mark_line(color='#5eead4').encode(x=alt.X('date:T', title=None), y=alt.Y('close:Q', title=None, scale=alt.Scale(zero=False))), width='stretch')
-    st.caption('USD · Unadjusted historical prices; returns may exclude dividends and corporate-action adjustments.')
+    st.caption(f"{report['market'].get('currency') or 'Currency unavailable'} · Provider closing prices; adjustment methodology unverified. No total-return claim.")
     st.subheader('Market context')
+    quality = report['market'].get('quality') or {}
+    st.caption('Volatility status: ' + (quality.get('volatility_status') or 'Legacy estimate; reliability not assessed'))
     st.dataframe(pd.DataFrame([{'Metric': key.replace('_', ' ').title(), 'Value': value} for key, value in indicators.items()]), hide_index=True)
     with st.expander('Sources and research limitations', expanded=True):
-        st.write(f"Financial source: {report['financial']['source']}")
-        st.write(f"Market source: {report['market']['provider']}")
+        for label, value in research_disclosures(report, data['prices'][ticker], data.get('batch_created_at_utc')).items():
+            st.write(f"{label}: {value if value is not None else 'Unavailable'}")
+        provenance = report['financial'].get('provenance') or {}
+        if provenance:
+            st.dataframe(pd.DataFrame(financial_provenance_rows(report['financial'])),
+                         hide_index=True, alt='Financial metric definitions and filing references')
+        fx = report['financial'].get('fx')
+        if fx:
+            st.write('FX source: ' + str(fx.get('source')))
+            st.dataframe(pd.DataFrame([{'Metric': key, **value} for key, value in (fx.get('rates') or {}).items()]),
+                         hide_index=True, alt='Existing financial currency conversion rates and bases')
+        bcg = report.get('bcg') or {}
+        if bcg.get('research_available'):
+            st.write(f"Source research class: {bcg.get('research_class') or 'Unavailable'}")
+            st.write(f"Workbook rule class: {bcg.get('rule_based_class') or 'Unavailable'}")
+        st.caption('Financial statements and market prices are independently dated. Latest-filed SEC facts are not a point-in-time backtest dataset.')
+        st.caption('Freshness thresholds: report/retrieval 36 hours, market date 4 calendar days, financial period 550 days. Exchange holidays are not modelled.')
         for warning in report['data_quality']['warnings']:
             st.write('• ' + warning)
     if os.environ.get('CIRA_AI_ENDPOINT'):
@@ -132,11 +152,16 @@ if view == 'Portfolio lab':
         try:
             result = module.analyze_portfolio(positions, data['prices'], cash)
             for column, label, value in zip(st.columns(3), ['Market value', 'Historical volatility', 'Maximum drawdown'],
-                    [f"${result['market_value']:,.2f}", f"{result['annualized_volatility_pct']:.2f}%", f"{result['maximum_drawdown_pct']:.2f}%"]):
+                    [f"${result['market_value']:,.2f}",
+                     f"{result['annualized_volatility_pct']:.2f}%" if result['annualized_volatility_pct'] is not None else 'Unavailable',
+                     f"{result['maximum_drawdown_pct']:.2f}%" if result['maximum_drawdown_pct'] is not None else 'Unavailable']):
                 column.metric(label, value)
             st.altair_chart(alt.Chart(pd.DataFrame(result['history'])).mark_line(color='#5eead4').encode(x=alt.X('date:T', title=None), y=alt.Y('value:Q', title=None, scale=alt.Scale(zero=False))), width='stretch')
             st.dataframe(pd.DataFrame([{'Holding': s, 'Allocation %': v} for s, v in result['allocations_pct'].items()]), hide_index=True)
             st.caption(result['method'])
+            st.caption('Volatility status: ' + result['quality']['volatility_status'])
+            for warning in result['quality_warnings']:
+                st.warning(warning)
             st.caption(f"{result['observations']} observations through {result['latest_date']}. Historical volatility is not a forecast.")
         except (ValueError, KeyError) as exc:
             st.error(str(exc))

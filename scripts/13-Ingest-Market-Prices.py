@@ -3,7 +3,6 @@
 import json
 import pathlib
 import sys
-from datetime import datetime, timezone
 from urllib.parse import quote
 
 import requests
@@ -11,7 +10,7 @@ import requests
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(ROOT / "ingestion"))
 
-from market_data import normalize_daily_prices
+from market_data import MAX_CHART_RESPONSE_BYTES, normalize_yahoo_chart
 
 
 SYMBOLS = list(__import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["active_tickers"]())
@@ -28,7 +27,7 @@ def fetch_prices(symbol):
     response = requests.get(
         url,
         params={
-            "range": "1mo",
+            "range": "1y",
             "interval": "1d",
         },
         headers={
@@ -36,60 +35,28 @@ def fetch_prices(symbol):
             "Accept": "application/json",
         },
         timeout=20,
+        stream=True,
     )
 
-    response.raise_for_status()
-    payload = response.json()
-
-    chart = payload.get("chart", {})
-
-    if chart.get("error"):
-        raise RuntimeError(str(chart["error"]))
-
-    results = chart.get("result") or []
-
-    if not results:
-        raise RuntimeError(f"No market data for {symbol}")
-
-    result = results[0]
-    timestamps = result.get("timestamp") or []
-    quotes = result.get("indicators", {}).get("quote") or []
-
-    if not quotes:
-        raise RuntimeError(f"No OHLCV data for {symbol}")
-
-    quote_data = quotes[0]
-    records = []
-
-    for index, timestamp in enumerate(timestamps):
+    try:
+        response.raise_for_status()
+        # iter_content decodes HTTP compression. Never buffer an unbounded body
+        # via response.content/json(), nor hold a chunk list plus a joined copy.
+        body = bytearray()
+        for chunk in response.iter_content(chunk_size=64 * 1024):
+            if len(body) + len(chunk) > MAX_CHART_RESPONSE_BYTES:
+                raise ValueError('Market response byte limit exceeded')
+            body.extend(chunk)
         try:
-            row = {
-                "date": datetime.fromtimestamp(
-                    timestamp, timezone.utc
-                ).date().isoformat(),
-                "open": quote_data["open"][index],
-                "high": quote_data["high"][index],
-                "low": quote_data["low"][index],
-                "close": quote_data["close"][index],
-                "volume": quote_data["volume"][index],
-            }
-        except (IndexError, KeyError, TypeError):
-            continue
-
-        if any(value is None for value in row.values()):
-            continue
-
-        if isinstance(row["volume"], bool):
-            continue
-
-        try:
-            row["volume"] = int(row["volume"])
-            validated = normalize_daily_prices(symbol, [row])
-            records.extend(validated)
-        except (ValueError, TypeError):
-            continue
-
-    return normalize_daily_prices(symbol, records)
+            payload = json.loads(body)
+        except json.JSONDecodeError as exc:
+            # Preserve response.json()'s request-error retry behavior.
+            raise requests.exceptions.JSONDecodeError(exc.msg, exc.doc, exc.pos) from exc
+        except (UnicodeDecodeError, RecursionError) as exc:
+            raise ValueError('Invalid market JSON structure or encoding') from exc
+        return normalize_yahoo_chart(symbol, payload)
+    finally:
+        response.close()
 
 
 RETRY_WAITS_SECONDS = (3, 8)
@@ -118,21 +85,11 @@ def main():
         print(f"\nFetching {symbol}...")
 
         try:
-            prices = fetch_with_retry(symbol)
+            document = fetch_with_retry(symbol)
+            prices = document['records']
 
             if not prices:
                 raise RuntimeError("No valid price records")
-
-            document = {
-                "symbol": symbol,
-                "provider": "Yahoo Finance chart endpoint (prototype)",
-                "retrieved_at_utc": datetime.now(
-                    timezone.utc
-                ).isoformat(),
-                "currency": "USD",
-                "price_type": "unadjusted",
-                "records": prices,
-            }
 
             path = OUTPUT / f"{symbol}-daily-prices.json"
             path.write_text(

@@ -1,5 +1,8 @@
 ﻿import json
 from datetime import date
+import hashlib
+import math
+import re
 from pathlib import Path
 
 TAGS = {
@@ -31,6 +34,21 @@ EQUITY_TAGS = (
 )
 
 
+def fact_reference(item, tag, currency, cik=None):
+    """Describe an SEC fact without changing its reported value or scale."""
+    accession = item.get('accn')
+    filing_url = None
+    if str(cik).isdigit() and re.fullmatch(r'\d{10}-\d{2}-\d{6}', str(accession)):
+        filing_url = (f'https://www.sec.gov/Archives/edgar/data/{int(cik)}/'
+                      f'{accession.replace("-", "")}/')
+    return {'tag': tag, 'namespace': 'us-gaap', 'form': item.get('form'),
+            'filed': item.get('filed'), 'period_end': item.get('end'),
+            'start': item.get('start'), 'accession': accession,
+            'filing_url': filing_url, 'unit': currency, 'scale': 1,
+            'reported_value': item.get('val'),
+            'period_type': 'duration' if item.get('start') else 'instant'}
+
+
 def _instant_value(facts, tag, period_end, currency="USD"):
     """Latest-filed 10-K balance-sheet value of a tag at period_end, or None."""
     best = None
@@ -39,12 +57,14 @@ def _instant_value(facts, tag, period_end, currency="USD"):
             continue
         if item.get("end") != period_end or item.get("start") is not None or not item.get("filed"):
             continue
+        if isinstance(item['val'], bool) or not isinstance(item['val'], (int, float)) or not math.isfinite(item['val']):
+            raise ValueError(f'Invalid reported financial value: {tag}')
         if best is None or (item["filed"], item.get("accn", "")) > (best["filed"], best.get("accn", "")):
             best = item
     return best
 
 
-def derive_total_liabilities(facts, period_end, currency="USD"):
+def derive_total_liabilities(facts, period_end, currency="USD", cik=None):
     """Current + non-current liabilities, accepted only if it equals total liabilities and equity minus equity."""
     current = _instant_value(facts, "LiabilitiesCurrent", period_end, currency)
     noncurrent = _instant_value(facts, "LiabilitiesNoncurrent", period_end, currency)
@@ -64,6 +84,11 @@ def derive_total_liabilities(facts, period_end, currency="USD"):
                 "period_end": period_end,
                 "start": None,
                 "accession": current.get("accn"),
+                "unit": currency,
+                "scale": 1,
+                "components": [fact_reference(item, tag, currency, cik) for tag, item in (
+                    ('LiabilitiesCurrent', current), ('LiabilitiesNoncurrent', noncurrent),
+                    ('LiabilitiesAndStockholdersEquity', total), (equity_tag, equity))],
             }
     return None
 
@@ -89,6 +114,8 @@ def extract_annual_metrics(companyfacts_path, currency="USD", fx=None):
                     continue
                 if not item.get("end") or not item.get("filed"):
                     continue
+                if isinstance(item['val'], bool) or not isinstance(item['val'], (int, float)) or not math.isfinite(item['val']):
+                    raise ValueError(f'Invalid reported financial value: {tag}')
 
                 if metric in INSTANT:
                     if item.get("start") is not None:
@@ -128,6 +155,12 @@ def extract_annual_metrics(companyfacts_path, currency="USD", fx=None):
 
         # Prefer configured tag order, then latest filing.
         if options:
+            seen = {}
+            for tag, item in options:
+                identity = (tag, item.get('accn'), item['filed'], item.get('start'), item['end'])
+                if identity in seen and seen[identity] != item['val']:
+                    raise ValueError(f'Conflicting duplicate SEC facts: {metric}')
+                seen[identity] = item['val']
             options.sort(
                 key=lambda pair: (
                     -TAGS[metric].index(pair[0]),
@@ -138,19 +171,13 @@ def extract_annual_metrics(companyfacts_path, currency="USD", fx=None):
             )
             tag, selected = options[0]
             results[metric] = selected["val"]
-            provenance[metric] = {
-                "tag": tag,
-                "filed": selected["filed"],
-                "period_end": selected["end"],
-                "start": selected.get("start"),
-                "accession": selected.get("accn"),
-            }
+            provenance[metric] = fact_reference(selected, tag, currency, data.get('cik'))
         else:
             results[metric] = None
             provenance[metric] = None
 
     if results["total_liabilities"] is None:
-        derived = derive_total_liabilities(facts, period_end, currency)
+        derived = derive_total_liabilities(facts, period_end, currency, data.get('cik'))
         if derived is not None:
             results["total_liabilities"], provenance["total_liabilities"] = derived
 
@@ -182,6 +209,25 @@ def extract_annual_metrics(companyfacts_path, currency="USD", fx=None):
         else None
     )
 
+    provenance['free_cash_flow'] = {
+        'method': 'operating_cash_flow - capital_expenditure (after existing USD conversion)',
+        'inputs': ['operating_cash_flow', 'capital_expenditure'], 'unit': 'USD',
+        'scale': 1, 'period_end': period_end,
+        'available': results['free_cash_flow'] is not None,
+    }
+    warnings = []
+    starts = {p.get('start') for p in provenance.values() if p and p.get('start')}
+    if len(starts) > 1:
+        warnings.append('Financial flow start dates differ; inspect metric periods before comparison')
+    for metric, p in provenance.items():
+        components = (p or {}).get('components', [])
+        if len({(c.get('filed'), c.get('accession')) for c in components}) > 1:
+            warnings.append(f'{metric}: derived components come from different filings')
+    for metric, value in results.items():
+        if value is not None and (isinstance(value, bool) or not isinstance(value, (int, float))
+                                  or not math.isfinite(value)):
+            raise ValueError(f'Invalid reported financial value: {metric}')
+
     return {
         "company": data.get("entityName"),
         "cik": data.get("cik"),
@@ -192,4 +238,10 @@ def extract_annual_metrics(companyfacts_path, currency="USD", fx=None):
         "reported_metrics": reported,
         "fx": fx_info,
         "provenance": provenance,
+        "source": {
+            "provider": "SEC Company Facts", "cik": data.get('cik'),
+            "sha256": hashlib.sha256(Path(companyfacts_path).read_bytes()).hexdigest(),
+            "selection_method": "Latest annual period; preferred tag then latest filing. Not point-in-time history.",
+        },
+        "quality_warnings": warnings,
     }

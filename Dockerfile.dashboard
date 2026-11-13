@@ -10,6 +10,7 @@ COPY dashboard/ /app/dashboard/
 COPY config/universe.json /app/config/universe.json
 COPY agents/research.py /app/agents/research.py
 COPY portfolio-engine/portfolio_analytics.py /app/portfolio-engine/portfolio_analytics.py
+COPY portfolio-engine/market_analytics.py /app/portfolio-engine/market_analytics.py
 RUN useradd --create-home --uid 10001 cira && chown -R cira:cira /app
 USER cira
 EXPOSE 8501

@@ -79,3 +79,16 @@ class TestBCGIntegration(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+def test_workbook_provenance_is_not_official_bcg_verification():
+    doc = {'dataset': 'CIRA BCG research import', 'source_file': 'user-workbook.xlsx',
+        'source_summary_date': '2026-10-28', 'imported_on': '2026-11-08',
+        'companies': [{'company': 'Microsoft', 'html_class': 'Star', 'rule_based_class': 'Star',
+                       'evidence_status': 'Classified', 'relative_share_x': 2}]}
+    result = bcg.integrate_bcg('MSFT', doc)
+    assert result['provenance']['source_summary_date'] == '2026-10-28'
+    assert result['classification_origin'] == 'user-supplied research'
+    assert result['independently_verified'] is False
+    assert 'No independent evidence' in result['verification_note']
+    missing = bcg.integrate_bcg('AAPL', doc)
+    assert missing['classification_origin'] == 'unavailable'

@@ -173,3 +173,49 @@ def test_latest_filing_selected(tmp_path):
 
     assert result["metrics_usd"]["revenue"] == 1100
     assert result["provenance"]["revenue"]["filed"] == "2026-11-03"
+
+
+@pytest.mark.parametrize('form', ['10-K', '10-K/A', '20-F', '20-F/A'])
+def test_filing_metadata_units_and_source_hash(tmp_path, form):
+    import hashlib
+    fact = dict(make_fact(1234567, '2025-12-31', '2025-01-01', '2026-02-01'),
+                form=form, accn='0000123456-26-000001')
+    doc = {'cik': 123456, 'facts': {'us-gaap': {'Revenues': {'units': {'USD': [fact, dict(fact)]}}}}}
+    path = tmp_path / 'facts.json'
+    path.write_text(json.dumps(doc))
+    result = module.extract_annual_metrics(path)
+    p = result['provenance']['revenue']
+    assert p['form'] == form and p['unit'] == 'USD' and p['scale'] == 1
+    assert p['filed'] == '2026-02-01' and p['period_type'] == 'duration'
+    assert p['filing_url'] == 'https://www.sec.gov/Archives/edgar/data/123456/000012345626000001/'
+    assert result['metrics_usd']['revenue'] == 1234567  # no implicit millions scaling or duplicate sum
+    assert result['source']['sha256'] == hashlib.sha256(path.read_bytes()).hexdigest()
+    assert result['provenance']['free_cash_flow']['available'] is False
+
+
+def test_conflicting_duplicate_financial_facts_rejected(tmp_path):
+    a = make_fact(100, '2025-12-31', '2025-01-01')
+    path = tmp_path / 'facts.json'
+    path.write_text(json.dumps({'facts': {'us-gaap': {'Revenues': {'units': {'USD': [a, dict(a, val=200)]}}}}}))
+    with pytest.raises(ValueError, match='Conflicting duplicate'):
+        module.extract_annual_metrics(path)
+
+
+def test_inconsistent_flow_periods_disclosed_without_changing_values(tmp_path):
+    revenue = make_fact(100, '2025-12-31', '2025-01-01')
+    income = make_fact(20, '2025-12-31', '2024-12-20')
+    path = tmp_path / 'facts.json'
+    path.write_text(json.dumps({'facts': {'us-gaap': {
+        'Revenues': {'units': {'USD': [revenue]}}, 'NetIncomeLoss': {'units': {'USD': [income]}}}}}))
+    result = module.extract_annual_metrics(path)
+    assert result['metrics_usd']['net_income'] == 20
+    assert any('start dates differ' in w for w in result['quality_warnings'])
+
+
+@pytest.mark.parametrize('value', [True, float('nan'), float('inf'), '100'])
+def test_invalid_financial_values_rejected(tmp_path, value):
+    path = tmp_path / 'facts.json'
+    path.write_text(json.dumps({'facts': {'us-gaap': {'Revenues': {'units': {'USD': [
+        make_fact(value, '2025-12-31', '2025-01-01')]}}}}}))
+    with pytest.raises(ValueError, match='Invalid reported financial'):
+        module.extract_annual_metrics(path)

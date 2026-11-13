@@ -99,3 +99,41 @@ class TestCompanyIntelligence(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+def test_financial_provenance_fx_and_market_quality_survive_combination():
+    case = TestCompanyIntelligence()
+    case.setUp()
+    case.financial.update(cik=123, reported_currency='EUR', reported_metrics={'revenue': 90},
+        fx={'source': 'fixed test rates', 'currency': 'EUR', 'rates': {'revenue': {'usd_per_unit': 1.1}}},
+        source={'sha256': 'test-source-hash', 'retrieved_at_utc': None})
+    case.financial['provenance'] = {'revenue': {'form': '20-F', 'unit': 'EUR',
+        'filed': '2026-08-01', 'accession': 'test-accession'}}
+    case.market['quality'] = {'volatility_status': 'low confidence: fewer than 60 returns'}
+    case.prices['source_metadata'] = {'rejected_observations': 2}
+    result = case.build()
+    assert result['financial']['reported_metrics']['revenue'] == 90
+    assert result['financial']['fx'] == case.financial['fx']
+    assert result['financial']['source_metadata']['sha256'] == 'test-source-hash'
+    assert result['financial']['filing_dates'] == ['2026-08-01']
+    assert result['financial']['metrics_usd']['revenue'] == 100
+    assert result['market']['source_metadata']['rejected_observations'] == 2
+    assert result['market']['quality'] == case.market['quality']
+
+
+def test_filing_after_market_date_and_currency_mismatch_disclosed():
+    case = TestCompanyIntelligence()
+    case.setUp()
+    case.financial['provenance'] = {'revenue': {'filed': '2026-11-07'}}
+    case.prices['currency'] = case.market['currency'] = 'EUR'
+    result = case.build()
+    assert result['data_quality']['filings_not_later_than_market'] is False
+    assert any('postdates' in w for w in result['data_quality']['warnings'])
+    assert any('currencies differ' in w for w in result['data_quality']['warnings'])
+
+
+def test_adjusted_label_alone_does_not_remove_limitation_warning():
+    case = TestCompanyIntelligence()
+    case.setUp()
+    case.prices['price_type'] = case.market['price_type'] = 'adjusted'
+    result = case.build()
+    assert any('exclude dividends' in w for w in result['data_quality']['warnings'])

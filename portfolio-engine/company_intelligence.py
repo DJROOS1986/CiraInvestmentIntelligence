@@ -1,6 +1,6 @@
 """CIRA Phase 5: combined company intelligence."""
 import math
-from datetime import datetime, timezone
+from datetime import date, datetime, timezone
 
 def require_object(value, label):
     if not isinstance(value, dict):
@@ -47,7 +47,7 @@ def provenance_warnings(financial):
     if not isinstance(provenance, dict):
         return []
     metrics = financial.get('metrics_usd') or {}
-    out = []
+    out = list(financial.get('quality_warnings') or [])
     fx = financial.get('fx')
     if isinstance(fx, dict) and fx.get('rates'):
         rates = fx['rates']
@@ -109,9 +109,55 @@ def build_company_intelligence(ticker, financial, prices, market, bcg_assessment
         warnings.append('BCG classification is source-reported, not independently verified')
     warnings.extend(universe_notes(ticker))
     warnings.extend(provenance_warnings(financial))
-    if price_type != 'adjusted':
-        warnings.append('Historical price returns may exclude dividends and corporate-action adjustments')
-    warnings.append('Financial reporting periods and market dates are not synchronized')
+    # The current integration has no independently validated adjustment method.
+    # An incoming label alone must never remove this limitation.
+    warnings.append('Historical price returns may exclude dividends and corporate-action adjustments')
+    warnings.extend(market.get('quality_warnings') or [])
+    period_end = financial.get('period_end')
+    if period_end and period_end != last_date:
+        warnings.append('Financial reporting periods and market dates are not synchronized')
+    if financial.get('currency') != market_currency:
+        warnings.append('Financial and market currencies differ; do not combine without explicit conversion')
+    provenance = financial.get('provenance') or {}
+    filing_dates = sorted({p['filed'] for p in provenance.values() if p and p.get('filed')}
+                          | {c['filed'] for p in provenance.values() if p
+                             for c in p.get('components', []) if c.get('filed')})
+    if filing_dates and filing_dates[-1] > last_date:
+        warnings.append('Financial filing postdates the market price; unavailable for point-in-time analysis')
+    if not filing_dates:
+        warnings.append('Financial filing date unavailable; historical information availability cannot be checked')
+    if period_end and (date.today() - date.fromisoformat(period_end)).days > 550:
+        warnings.append('Financial reporting period is older than 550 days')
+    if period_end and period_end > last_date:
+        warnings.append('Financial period ends after the market price date')
     financial_values = {key: optional_number(metrics.get(key), key) for key in ('revenue', 'net_income', 'total_assets', 'total_liabilities', 'operating_cash_flow', 'capital_expenditure', 'free_cash_flow')}
     market_values = {key: optional_number(market.get(key), key) for key in ('latest_close', 'daily_return_pct', 'period_price_change_pct', 'sma_5', 'sma_20', 'annualized_volatility_pct')}
-    return {'schema_version': '1.0', 'ticker': ticker, 'company': financial.get('company'), 'generated_at_utc': datetime.now(timezone.utc).isoformat(), 'financial': {'source': 'SEC financial report', 'period_end': financial.get('period_end'), 'currency': financial.get('currency'), 'metrics_usd': financial_values, 'provenance': financial.get('provenance'), 'report_generated_at_utc': financial.get('generated_at_utc')}, 'market': {'provider': market.get('provider'), 'retrieved_at_utc': prices.get('retrieved_at_utc'), 'currency': market_currency, 'price_type': price_type, 'first_date': market.get('first_date'), 'last_date': market.get('last_date'), 'observations': observations, 'indicators': market_values, 'return_basis': market.get('return_basis')}, 'bcg': dict(bcg_assessment), 'data_quality': {'warnings': warnings, 'independently_verified_bcg': False, 'investment_recommendation': None}, **({'run_id': run_id} if run_id is not None else {})}
+    return {
+        'schema_version': '1.0', 'ticker': ticker, 'company': financial.get('company'),
+        'generated_at_utc': datetime.now(timezone.utc).isoformat(),
+        'financial': {
+            'source': 'SEC financial report', 'period_end': period_end,
+            'currency': financial.get('currency'), 'metrics_usd': financial_values,
+            'provenance': provenance, 'filing_dates': filing_dates,
+            'source_metadata': financial.get('source'), 'cik': financial.get('cik'),
+            'source_file': financial.get('source_file'),
+            'reported_currency': financial.get('reported_currency'),
+            'reported_metrics': financial.get('reported_metrics'), 'fx': financial.get('fx'),
+            'report_generated_at_utc': financial.get('generated_at_utc'),
+        },
+        'market': {
+            'provider': market.get('provider'), 'retrieved_at_utc': prices.get('retrieved_at_utc'),
+            'currency': market_currency, 'price_type': price_type,
+            'first_date': market.get('first_date'), 'last_date': market.get('last_date'),
+            'observations': observations, 'indicators': market_values,
+            'return_basis': market.get('return_basis'),
+            'quality': market.get('quality'), 'source_metadata': prices.get('source_metadata'),
+            'adjustment': prices.get('adjustment'),
+            'annualization_trading_days': market.get('annualization_trading_days'),
+        },
+        'bcg': dict(bcg_assessment),
+        'data_quality': {'warnings': list(dict.fromkeys(warnings)),
+                         'independently_verified_bcg': False, 'investment_recommendation': None,
+                         'filings_not_later_than_market': bool(filing_dates) and filing_dates[-1] <= last_date},
+        **({'run_id': run_id} if run_id is not None else {}),
+    }

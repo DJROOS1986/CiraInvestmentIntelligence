@@ -51,7 +51,8 @@ def main():
         print(f"\n=== {symbol} ===")
         print(f"Latest date: {report['last_date']}")
         print(f"Latest close: {report['latest_close']:.2f}")
-        print(f"Daily return: {report['daily_return_pct']:.2f}%")
+        daily = report['daily_return_pct']
+        print('Daily return: ' + (f'{daily:.2f}%' if daily is not None else 'Unavailable'))
         print(f"5-day SMA: {report['sma_5']}")
         print(f"20-day SMA: {report['sma_20']}")
         print(

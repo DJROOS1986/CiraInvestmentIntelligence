@@ -67,6 +67,11 @@ def integrate_bcg(ticker, data):
         "research_available": record is not None,
         "verified_bcg_class": None,
         "investment_recommendation": None,
+        "independently_verified": False,
+        "classification_origin": "user-supplied research" if record else "unavailable",
+        "provenance": {key: data.get(key) for key in (
+            'dataset', 'source_file', 'source_sheet', 'source_summary_date', 'imported_on', 'cautions')},
+        "verification_note": "No independent evidence of an official BCG assessment",
     }
 
     if record is None:
@@ -88,12 +93,14 @@ def integrate_bcg(ticker, data):
         "theme": record.get("theme"),
         "research_class": record.get("html_class"),
         "rule_based_class": rule_class,
+        "rule_class_origin": "Rule-based classification imported from the user workbook",
         "evidence_status": evidence,
         "market_growth_pct": record.get("market_growth_pct"),
         "market_share_pct": record.get("market_share_pct"),
         "relative_share_x": record.get("relative_share_x"),
         "research_score": record.get("star_score"),
         "quality_tier": record.get("quality_tier"),
+        # Legacy field retained for older readers; this is NOT independent verification.
         "verified_bcg_class": rule_class if verified else None,
         "status": (
             "Evidence-classified (source-reported)"
