@@ -104,3 +104,22 @@ def test_excluding_tax_label_still_preferred():
     facts = {**BASE, "RevenueFromContractWithCustomerIncludingAssessedTax": duration(9_999)}
     result = run(facts)
     assert result["provenance"]["revenue"]["tag"] == "RevenueFromContractWithCustomerExcludingAssessedTax"
+
+
+def test_20f_annual_report_accepted():  # foreign private issuers (e.g. Camtek, Nova) file 20-F instead of 10-K
+    facts = {}
+    for label, entry in BASE.items():
+        facts[label] = {"USD": [dict(item, form="20-F") for item in entry["USD"]]}
+    result = run(facts)
+    assert result["metrics_usd"]["revenue"] == 5_296_759_000
+    assert result["metrics_usd"]["capital_expenditure"] == 141_871_000
+
+
+def test_non_usd_20f_values_ignored():  # e.g. Alibaba reports in CNY: must not be read as USD
+    facts = {label: ({"CNY": entry["USD"]} if label.startswith("Revenue") else entry) for label, entry in BASE.items()}
+    try:
+        run(facts)
+    except ValueError as exc:
+        assert "revenue" in str(exc).lower()
+    else:
+        raise AssertionError("CNY revenue must not be accepted")

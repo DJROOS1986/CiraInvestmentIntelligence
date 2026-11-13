@@ -35,7 +35,7 @@ def _instant_value(facts, tag, period_end):
     """Latest-filed 10-K balance-sheet value of a tag at period_end, or None."""
     best = None
     for item in facts.get(tag, {}).get("units", {}).get("USD", []):
-        if item.get("form") not in ("10-K", "10-K/A") or item.get("val") is None:
+        if item.get("form") not in ("10-K", "10-K/A", "20-F", "20-F/A") or item.get("val") is None:
             continue
         if item.get("end") != period_end or item.get("start") is not None or not item.get("filed"):
             continue
@@ -83,7 +83,7 @@ def extract_annual_metrics(companyfacts_path):
             ).get("USD", [])
 
             for item in values:
-                if item.get("form") not in ("10-K", "10-K/A"):
+                if item.get("form") not in ("10-K", "10-K/A", "20-F", "20-F/A"):
                     continue
                 if item.get("val") is None:
                     continue

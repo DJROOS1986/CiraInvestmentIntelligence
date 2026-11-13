@@ -59,7 +59,7 @@ def main():
         except (TypeError, ValueError):
             return -1.0
 
-    pool = [r for r in rows if r["category"] == "SEC_10K" and r["primary_ticker"] not in in_universe]
+    pool = [r for r in rows if r["category"] in ("SEC_10K", "SEC_20F") and r["primary_ticker"] not in in_universe]
     if args.tickers:
         wanted = [t.upper() for t in args.tickers]
         chosen = [r for t in wanted for r in pool if r["primary_ticker"] == t]
@@ -108,7 +108,7 @@ def main():
             currency = result_chart.get("meta", {}).get("currency")
             out["price"] = f"{len(closes)} closes {currency}" if closes else "NO PRICES"
 
-            ok_form = out["form"].startswith("10-K")
+            ok_form = out["form"].startswith(("10-K", "20-F"))
             from datetime import date
             stale = (date.today() - date.fromisoformat(out["period"])).days > MAX_FINANCIAL_AGE_DAYS
             ok_price = bool(closes) and currency == "USD"
@@ -118,7 +118,7 @@ def main():
             if out["verdict"].startswith("READY"):
                 notes = [NOTE_ROWS[r["bcg_name"]]] if r["bcg_name"] in NOTE_ROWS else []
                 proposals.append({"ticker": ticker, "cik": cik, "sec_name": r["entity"], "bcg_name": r["bcg_name"],
-                                  "bcg_required": True, "annual_form": "10-K", "notes": notes})
+                                  "bcg_required": True, "annual_form": out["form"].split()[0], "notes": notes})
         except Exception as exc:  # one company never stops the batch check
             out["verdict"] = f"ERROR: {type(exc).__name__}: {exc}"[:120]
         results.append(out)

@@ -47,7 +47,7 @@ def main():
     raw = IDENTIFIERS.read_bytes().decode("utf-8")
     rows = list(csv.DictReader(io.StringIO(raw)))
     fields = list(rows[0])
-    by_ticker = {r["primary_ticker"]: r for r in rows if r["category"] == "SEC_10K"}
+    by_ticker = {r["primary_ticker"]: r for r in rows if r["category"] in ("SEC_10K", "SEC_20F")}
 
     added, problems = [], []
     for c in proposal:
@@ -76,7 +76,7 @@ def main():
     UNIVERSE.write_bytes(render_universe(universe).encode("utf-8"))
     tickers = {c["ticker"] for c in added}
     for r in rows:
-        if r["category"] == "SEC_10K" and r["primary_ticker"] in tickers:
+        if r["category"] in ("SEC_10K", "SEC_20F") and r["primary_ticker"] in tickers:
             r["in_universe"] = "yes"
     out = io.StringIO()
     writer = csv.DictWriter(out, fieldnames=fields, lineterminator="\n")

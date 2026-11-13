@@ -1,0 +1,86 @@
+{
+  "proposed_companies": [
+    {
+      "ticker": "ARM",
+      "cik": "0001973239",
+      "sec_name": "ARM HOLDINGS PLC /UK",
+      "bcg_name": "Arm Holdings",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "notes": []
+    },
+    {
+      "ticker": "CAMT",
+      "cik": "0001109138",
+      "sec_name": "CAMTEK LTD",
+      "bcg_name": "Camtek",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "notes": []
+    },
+    {
+      "ticker": "NVMI",
+      "cik": "0001109345",
+      "sec_name": "NOVA LTD.",
+      "bcg_name": "Nova Ltd",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "notes": []
+    },
+    {
+      "ticker": "SE",
+      "cik": "0001703399",
+      "sec_name": "Sea Ltd",
+      "bcg_name": "Sea Limited",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "notes": []
+    }
+  ],
+  "checks": [
+    {
+      "ticker": "ARM",
+      "bcg_name": "Arm Holdings",
+      "star": "84",
+      "form": "20-F 2026-05-26",
+      "period": "2026-03-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "CAMT",
+      "bcg_name": "Camtek",
+      "star": "72",
+      "form": "20-F 2026-03-19",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "NVMI",
+      "bcg_name": "Nova Ltd",
+      "star": "68",
+      "form": "20-F 2026-02-17",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "SE",
+      "bcg_name": "Sea Limited",
+      "star": "68",
+      "form": "20-F 2026-04-17",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    }
+  ]
+}

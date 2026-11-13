@@ -35,7 +35,7 @@ class IdentifierMasterTests(unittest.TestCase):
                 self.assertEqual(seen.setdefault(r["sec_cik"], r["entity"]), r["entity"], r["bcg_name"])
 
     def test_universe_companies_agree_with_identifier_master(self):
-        by_ticker = {r["primary_ticker"]: r for r in self.rows if r["category"] == "SEC_10K"}
+        by_ticker = {r["primary_ticker"]: r for r in self.rows if r["category"] in ("SEC_10K", "SEC_20F")}
         for c in self.universe:
             if c["bcg_required"]:
                 self.assertIn(c["ticker"], by_ticker, c["ticker"])

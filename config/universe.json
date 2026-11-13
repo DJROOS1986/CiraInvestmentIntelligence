@@ -69,6 +69,10 @@
     {"ticker": "VRT", "cik": "0001674101", "sec_name": "Vertiv Holdings Co", "bcg_name": "Vertiv Holdings", "bcg_required": true, "annual_form": "10-K", "notes": []},
     {"ticker": "ELF", "cik": "0001600033", "sec_name": "e.l.f. Beauty, Inc.", "bcg_name": "e.l.f. Beauty", "bcg_required": true, "annual_form": "10-K", "notes": []},
     {"ticker": "CPRT", "cik": "0000900075", "sec_name": "COPART INC", "bcg_name": "Copart", "bcg_required": true, "annual_form": "10-K", "notes": []},
-    {"ticker": "CRWD", "cik": "0001535527", "sec_name": "CrowdStrike Holdings, Inc.", "bcg_name": "CrowdStrike", "bcg_required": true, "annual_form": "10-K", "notes": []}
+    {"ticker": "CRWD", "cik": "0001535527", "sec_name": "CrowdStrike Holdings, Inc.", "bcg_name": "CrowdStrike", "bcg_required": true, "annual_form": "10-K", "notes": []},
+    {"ticker": "ARM", "cik": "0001973239", "sec_name": "ARM HOLDINGS PLC /UK", "bcg_name": "Arm Holdings", "bcg_required": true, "annual_form": "20-F", "notes": []},
+    {"ticker": "CAMT", "cik": "0001109138", "sec_name": "CAMTEK LTD", "bcg_name": "Camtek", "bcg_required": true, "annual_form": "20-F", "notes": []},
+    {"ticker": "NVMI", "cik": "0001109345", "sec_name": "NOVA LTD.", "bcg_name": "Nova Ltd", "bcg_required": true, "annual_form": "20-F", "notes": []},
+    {"ticker": "SE", "cik": "0001703399", "sec_name": "Sea Ltd", "bcg_name": "Sea Limited", "bcg_required": true, "annual_form": "20-F", "notes": []}
   ]
 }

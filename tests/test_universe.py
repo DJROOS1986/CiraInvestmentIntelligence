@@ -31,7 +31,7 @@ class UniverseTests(unittest.TestCase):
 
     def test_only_10k_filers_in_stage_one(self):
         for c in self.companies:
-            self.assertEqual(c["annual_form"], "10-K", c["ticker"])
+            self.assertIn(c["annual_form"], ("10-K", "20-F"), c["ticker"])
 
     def test_required_bcg_names_exist(self):
         for c in self.companies:
