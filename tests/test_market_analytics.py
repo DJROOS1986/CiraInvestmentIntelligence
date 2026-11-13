@@ -206,3 +206,50 @@ def test_suspicious_upward_move_also_withholds_crossing_average():
     result = module.analyze_prices(sample_document([50, 50, 100, 100, 100]))
     assert result['sma_5'] is None
     assert result['quality']['extreme_move_dates'] == ['2026-10-03']
+
+
+def test_quality_messages_identify_only_actual_unavailability_reasons():
+    short = module.analyze_prices(sample_document([100, 101]))
+    assert short['quality']['volatility_status'] == 'unavailable: fewer than two returns'
+    assert short['quality']['daily_return_status'].startswith('available')
+    doc = sample_document([100, 101, 102])
+    for row, stamp in zip(doc['records'], ['2026-11-24', '2026-11-25', '2026-11-27']):
+        row['date'] = stamp
+    uncertain = module.analyze_prices(doc)
+    assert uncertain['quality']['volatility_status'] == 'unavailable: uncertain trading-session continuity'
+    assert uncertain['quality']['daily_return_status'] == 'unavailable: uncertain latest trading interval'
+    assert uncertain['quality']['period_return_status'].startswith('available')
+    assert uncertain['quality']['confirmed_missing_sessions'] is None
+    assert uncertain['quality']['verified_holiday_sessions'] is None
+    assert uncertain['quality']['unobserved_weekdays'] == 1
+
+
+def test_split_quality_preserves_unaffected_average_and_current_price():
+    doc = sample_document([100] * 5 + [50] * 20)
+    doc['corporate_actions'] = {'splits': [{'date': '2026-10-06'}],
+                                'dividends': [{'date': '2026-10-20', 'amount': 1}]}
+    result = module.analyze_prices(doc)
+    assert result['latest_close'] == 50
+    assert result['period_price_change_pct'] is None
+    assert result['annualized_volatility_pct'] is None
+    assert result['quality']['volatility_status'] == 'unavailable: unvalidated price discontinuity'
+    assert result['sma_5'] == result['sma_20'] == 50
+    assert result['quality']['moving_average_status']['20'].startswith('available')
+    assert 'insufficient' not in result['quality']['volatility_status']
+
+
+def test_251_observations_do_not_prove_incomplete_exchange_year():
+    from datetime import date, timedelta
+    day = date(2025, 1, 1)
+    rows = []
+    for offset in range(365):
+        stamp = day + timedelta(days=offset)
+        if stamp.weekday() < 5:
+            rows.append({'date': stamp.isoformat(), 'close': 100})
+    # Omitted weekdays are deliberately unverified, not labelled exchange holidays.
+    rows = rows[:1] + rows[11:]
+    result = module.analyze_prices({'symbol': 'TEST', 'records': rows})
+    assert result['observations'] == 251
+    assert result['annualized_volatility_pct'] is None
+    assert result['quality']['unobserved_weekdays'] == 10
+    assert not any('one trading year' in warning for warning in result['quality_warnings'])

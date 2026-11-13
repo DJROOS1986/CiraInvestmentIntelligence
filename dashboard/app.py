@@ -11,7 +11,8 @@ import streamlit as st
 
 ROOT = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(Path(__file__).resolve().parent))
-from data import TICKERS, freshness, load_azure, load_local, research_disclosures, financial_provenance_rows
+from data import (TICKERS, freshness, load_azure, load_local, disclosure_groups,
+                  financial_provenance_rows, format_money, money_help, active_warnings)
 
 from access import entra_allowed
 
@@ -77,17 +78,14 @@ if view == 'Company research':
     st.caption(f"Financial period: {report['financial']['period_end']} · Market date: {report['market']['last_date']} · Generated: {report['generated_at_utc']}")
     metrics = report['financial']['metrics_usd']
     indicators = report['market']['indicators']
-    columns = st.columns(4)
-    for column, label, value, unit in zip(columns,
-            ['Revenue', 'Net income', 'Free cash flow', 'Latest close'],
-            [metrics.get('revenue'), metrics.get('net_income'), metrics.get('free_cash_flow'), indicators.get('latest_close')],
-            ['B', 'B', 'B', '']):
-        display = 'Unavailable'
-        if value is not None:
-            currency = report['financial'].get('currency', 'USD') if unit else report['market'].get('currency', 'Unknown currency')
-            prefix = '$' if currency == 'USD' else currency + ' '
-            display = f'{prefix}{value / 1e9:,.2f}B' if unit else f'{prefix}{value:,.2f}'
-        column.metric(label, display)
+    with st.container(horizontal=True):
+        for label, value, currency, compact in [
+                ('Revenue', metrics.get('revenue'), report['financial'].get('currency', 'USD'), True),
+                ('Net income', metrics.get('net_income'), report['financial'].get('currency', 'USD'), True),
+                ('Free cash flow', metrics.get('free_cash_flow'), report['financial'].get('currency', 'USD'), True),
+                ('Latest close', indicators.get('latest_close'), report['market'].get('currency'), False)]:
+            st.metric(label, format_money(value, currency, compact), width=230,
+                      help=money_help(value, currency))
     history = pd.DataFrame(data['prices'][ticker]['records'])
     st.subheader('Historical closing prices')
     st.altair_chart(alt.Chart(history).mark_line(color='#5eead4').encode(x=alt.X('date:T', title=None), y=alt.Y('close:Q', title=None, scale=alt.Scale(zero=False))), width='stretch')
@@ -97,24 +95,30 @@ if view == 'Company research':
     st.caption('Volatility status: ' + (quality.get('volatility_status') or 'Legacy estimate; reliability not assessed'))
     st.dataframe(pd.DataFrame([{'Metric': key.replace('_', ' ').title(), 'Value': value} for key, value in indicators.items()]), hide_index=True)
     with st.expander('Sources and research limitations', expanded=True):
-        for label, value in research_disclosures(report, data['prices'][ticker], data.get('batch_created_at_utc')).items():
-            st.write(f"{label}: {value if value is not None else 'Unavailable'}")
-        provenance = report['financial'].get('provenance') or {}
-        if provenance:
-            st.dataframe(pd.DataFrame(financial_provenance_rows(report['financial'])),
-                         hide_index=True, alt='Financial metric definitions and filing references')
-        fx = report['financial'].get('fx')
-        if fx:
-            st.write('FX source: ' + str(fx.get('source')))
-            st.dataframe(pd.DataFrame([{'Metric': key, **value} for key, value in (fx.get('rates') or {}).items()]),
-                         hide_index=True, alt='Existing financial currency conversion rates and bases')
-        bcg = report.get('bcg') or {}
-        if bcg.get('research_available'):
-            st.write(f"Source research class: {bcg.get('research_class') or 'Unavailable'}")
-            st.write(f"Workbook rule class: {bcg.get('rule_based_class') or 'Unavailable'}")
-        st.caption('Financial statements and market prices are independently dated. Latest-filed SEC facts are not a point-in-time backtest dataset.')
-        st.caption('Freshness thresholds: report/retrieval 36 hours, market date 4 calendar days, financial period 550 days. Exchange holidays are not modelled.')
-        for warning in report['data_quality']['warnings']:
+        for group, facts in disclosure_groups(report, data['prices'][ticker], data.get('batch_created_at_utc')).items():
+            st.markdown(f'#### {group}')
+            for label, value in facts.items():
+                st.write(f"{label}: {value if value is not None else 'Unavailable'}")
+            if group == 'Financial reporting and SEC provenance':
+                if report['financial'].get('provenance'):
+                    st.dataframe(pd.DataFrame(financial_provenance_rows(report['financial'])),
+                                 hide_index=True, alt='Financial metric definitions and filing references')
+                fx = report['financial'].get('fx')
+                if fx:
+                    st.write('FX source: ' + str(fx.get('source')))
+                    st.dataframe(pd.DataFrame([{'Metric': key, **value} for key, value in (fx.get('rates') or {}).items()]),
+                                 hide_index=True, alt='Existing financial currency conversion rates and bases')
+                st.caption('Financial statements and market prices are independently dated. Latest-filed SEC facts are not a point-in-time backtest dataset.')
+            if group == 'BCG classification provenance':
+                bcg = report.get('bcg') or {}
+                if bcg.get('research_available'):
+                    st.write(f"Source research class: {bcg.get('research_class') or 'Unavailable'}")
+                    st.write(f"Workbook rule class: {bcg.get('rule_based_class') or 'Unavailable'}")
+            if group == 'Research timestamps and freshness':
+                st.write('Freshness assessment: ' + status)
+                st.caption('Freshness thresholds: report/retrieval 36 hours, market date 4 calendar days, financial period 550 days. Exchange holidays are not modelled.')
+        st.markdown('#### Active warnings and unresolved limitations')
+        for warning in active_warnings(report):
             st.write('• ' + warning)
     if os.environ.get('CIRA_AI_ENDPOINT'):
         st.subheader('AI-selected research highlights')
@@ -169,6 +173,6 @@ if view == 'Portfolio lab':
 if view == 'Data quality':
     st.dataframe(pd.DataFrame([{'Ticker': t, 'Freshness': freshness(r), 'Market date': r['market']['last_date'],
         'Financial period': r['financial']['period_end'], 'Generated UTC': r['generated_at_utc'],
-        'Warnings': len(r['data_quality']['warnings'])} for t, r in data['companies'].items()]), hide_index=True)
+        'Warnings': len(active_warnings(r))} for t, r in data['companies'].items()]), hide_index=True)
     st.write('BCG classifications are source-reported research and are not independently verified.')
     st.write('The market feed is a prototype provider. No buy/sell recommendation is generated.')

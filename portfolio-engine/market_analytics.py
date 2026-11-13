@@ -41,8 +41,6 @@ def series_quality(dates, closes, document):
     unsafe = bool(moves or splits)
     if unsafe:
         warnings.append('Split event or extreme price move: historical return and risk estimates withheld pending adjustment validation')
-    if gaps:
-        warnings.append('Long gaps between observations; session continuity cannot be established')
     if absent_weekdays:
         warnings.append(f'{absent_weekdays} weekdays without observations; may include exchange holidays or missing sessions; daily volatility withheld, no forward fill')
     count = len(closes) - 1
@@ -52,13 +50,21 @@ def series_quality(dates, closes, document):
         warnings.append('Short price history: fewer than 60 observed returns')
     elif count < 252:
         status = 'limited history: fewer than 252 returns'
-        warnings.append('Less than one trading year of returns')
-    if unsafe or uncertain or count < 2:
-        status = 'unavailable: discontinuity, uncertain trading-session continuity, or insufficient returns'
+    reasons = []
+    if unsafe:
+        reasons.append('unvalidated price discontinuity')
+    if uncertain:
+        reasons.append('uncertain trading-session continuity')
+    if count < 2:
+        reasons.append('fewer than two returns')
+    if reasons:
+        status = 'unavailable: ' + '; '.join(reasons)
     return {'return_observations': count, 'calendar_span_days': (dates[-1] - dates[0]).days,
             'long_gap_count': gaps, 'extreme_move_count': moves, 'split_dates': splits,
             'extreme_move_dates': move_dates,
             'unobserved_weekdays': absent_weekdays,
+            'confirmed_missing_sessions': None,
+            'verified_holiday_sessions': None,
             'uncertain_interval_count': uncertain,
             'confirmed_daily_return_observations': count - uncertain,
             'latest_interval_consecutive': bool(missing_weekdays) and missing_weekdays[-1] == 0,
@@ -95,6 +101,14 @@ def analyze_prices(document):
         for i in range(1, len(closes))
     ]
     quality, warnings = series_quality(dates, closes, document)
+    quality['period_return_status'] = (
+        'available: observed-window price change, not total return' if quality['historical_returns_available'] else
+        'unavailable: unvalidated price discontinuity')
+    quality['daily_return_status'] = (
+        'available: consecutive observations or weekend-only closure' if quality['latest_interval_consecutive'] else
+        'unavailable: uncertain latest trading interval')
+    if not quality['historical_returns_available']:
+        quality['daily_return_status'] = 'unavailable: history contains an unvalidated price discontinuity'
 
     def sma(window):
         if len(closes) < window:
@@ -113,8 +127,9 @@ def analyze_prices(document):
         )
     averages = {window: sma(window) for window in (5, 20)}
     quality['moving_average_status'] = {
-        str(window): ('available' if averages[window] is not None else
-                      'unavailable: insufficient observations or a discontinuity inside this window')
+        str(window): ('unavailable: insufficient observations' if len(closes) < window else
+                      'unavailable: discontinuity inside this window' if averages[window] is None else
+                      'available: mean of observed closes; session completeness unverified')
         for window in averages}
 
     return {
@@ -141,7 +156,7 @@ def analyze_prices(document):
         "annualization_trading_days": 252,
         "return_basis": "unadjusted_close",
         "quality": quality,
-        "quality_warnings": warnings,
+        "quality_warnings": list(dict.fromkeys(warnings)),
         "note": (
             "Historical descriptive analytics only. "
             "Unadjusted prices exclude dividend adjustments "

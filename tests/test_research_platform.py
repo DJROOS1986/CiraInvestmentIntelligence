@@ -371,3 +371,100 @@ def test_legacy_filing_summary_matches_metric_and_component_table():
     assert data_reader.research_disclosures(report, {'records': []})['Financial filing dates'] == expected
     financial['provenance'] = {'revenue': {}}
     assert data_reader.research_disclosures(report, {'records': []})['Financial filing dates'] is None
+
+
+@pytest.mark.parametrize('value,currency,expected', [
+    (478_834_000_000, 'USD', '$478.8B'), (132_100_000_000, 'USD', '$132.1B'),
+    (136_000_000_000, 'USD', '$136.0B'), (12_345, 'USD', '$12.3K'),
+    (1_500_000, 'EUR', 'EUR 1.5M'), (1_200_000_000_000, 'CNY', 'CNY 1.2T'),
+    (-132_100_000_000, 'USD', '-$132.1B'), (0, 'USD', '$0.00'),
+    (0.25, 'USD', '$0.25'), (999_999, 'USD', '$1.0M'),
+    (1e18, 'USD', '$1.0e+18'), (None, 'USD', 'Unavailable'),
+    (float('nan'), 'USD', 'Unavailable'), (float('inf'), 'USD', 'Unavailable'),
+    (True, 'USD', 'Unavailable'), ('123', 'USD', 'Unavailable'),
+    (100, None, 'Currency unavailable 100.00'),
+])
+def test_compact_money_presentation(value, currency, expected):
+    assert data_reader.format_money(value, currency) == expected
+
+
+def test_price_precision_and_full_report_tooltip():
+    assert data_reader.format_money(354.88, 'USD', compact=False) == '$354.88'
+    assert data_reader.format_money(99, 'EUR', compact=False) == 'EUR 99.00'
+    assert data_reader.format_money(1e18, 'USD', compact=False) == '$1.0e+18'
+    assert '478,834,000,000.125' in data_reader.money_help(478_834_000_000.125, 'USD')
+    assert 'no estimate' in data_reader.money_help(None, 'USD')
+
+
+def test_disclosure_grouping_preserves_every_fact_and_legacy_absence():
+    report = {'financial': {'period_end': '2026-06-30', 'provenance': {'revenue': {'filed': '2026-08-01'}}},
+              'market': {'last_date': '2026-11-12', 'source_metadata': {
+                  'rejected_observations': 1, 'rejected_dates': ['2026-11-13'],
+                  'rejection_reasons': {'future': 1}}}}
+    history = {'records': []}
+    groups = data_reader.disclosure_groups(report, history, '2026-11-13T19:51:21Z')
+    flat = {label: value for facts in groups.values() for label, value in facts.items()}
+    assert flat == data_reader.research_disclosures(report, history, '2026-11-13T19:51:21Z')
+    assert sum(map(len, groups.values())) == len(flat)
+    assert flat['Financial filing dates'] == '2026-08-01'
+    assert flat['Rejected dates'] == '2026-11-13'
+    assert flat['Confirmed missing sessions'] is None
+    assert flat['Verified holiday sessions'] is None
+    assert flat['Reported split events'] is None  # unknown is not zero
+    assert flat['Reported dividend events'] is None
+    history['corporate_actions'] = {'coverage': 'unverified', 'splits': None}
+    absent = data_reader.research_disclosures(report, history)
+    assert absent['Reported split events'] is None and absent['Reported dividend events'] is None
+    history['corporate_actions'].update(splits=[], dividends=[{'amount': 1}])
+    present = data_reader.research_disclosures(report, history)
+    assert present['Reported split events'] == 0 and present['Reported dividend events'] == 1
+
+
+def test_warning_coalescing_retains_unknown_evidence_and_original_report():
+    import copy
+    warnings = ['Historical price returns may exclude dividends and corporate-action adjustments',
+        'Corporate-action completeness and provider close adjustment methodology are unverified',
+        'Financial filing postdates the market price; unavailable for point-in-time analysis',
+        'BCG classification is not independently verified', 'source-specific warning', 'source-specific warning']
+    report = {'data_quality': {'warnings': warnings}}
+    original = copy.deepcopy(report)
+    displayed = data_reader.active_warnings(report)
+    assert len(displayed) == 4
+    assert 'dividends' in displayed[0] and 'methodology are unverified' in displayed[0]
+    assert displayed[1:] == warnings[2:5]
+    assert report == original
+
+
+@pytest.mark.parametrize('ticker,currency,values,expected', [
+    ('AAPL', 'USD', (478_834_000_000, 132_100_000_000, 136_000_000_000),
+     ['$478.8B', '$132.1B', '$136.0B']),
+    ('ASML', 'EUR', (30_000_000_000, -1_500_000, None),
+     ['$30.0B', '-$1.5M', 'Unavailable']),
+    ('BABA', 'USD', (0, None, 1e18), ['$0.00', 'Unavailable', '$1.0e+18']),
+])
+def test_company_cards_and_grouped_legacy_disclosures(research_root, monkeypatch, ticker, currency, values, expected):
+    from streamlit.testing.v1 import AppTest
+    import streamlit as st
+    st.cache_data.clear()
+    monkeypatch.delenv('CIRA_STORAGE_ACCOUNT', raising=False)
+    monkeypatch.delenv('CIRA_AI_ENDPOINT', raising=False)
+    monkeypatch.setenv('CIRA_PROJECT_ROOT', str(research_root))
+    path = research_root / f'reports/company-intelligence/{ticker}-company-intelligence.json'
+    report = json.loads(path.read_text())
+    report['financial']['metrics_usd'] = dict(zip(['revenue', 'net_income', 'free_cash_flow'], values))
+    report['financial']['reported_currency'] = 'EUR' if ticker == 'ASML' else 'USD'
+    report['market']['currency'] = currency
+    path.write_text(json.dumps(report))
+    app = AppTest.from_file(str(ROOT / 'dashboard/app.py')).run(timeout=20)
+    app.selectbox[0].select(ticker).run()
+    assert not app.exception
+    assert [card.value for card in app.metric[:3]] == expected
+    assert app.metric[3].value == ('$99.00' if currency == 'USD' else 'EUR 99.00')
+    assert all(card.proto.help for card in app.metric)
+    text = '\n'.join(element.value for element in app.markdown)
+    for title in data_reader.disclosure_groups(report, {}):
+        assert title in text
+    assert 'Active warnings and unresolved limitations' in text
+    assert 'test warning' in text
+    assert json.loads(path.read_text()) == report
+    st.cache_data.clear()

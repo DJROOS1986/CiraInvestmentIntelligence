@@ -274,6 +274,24 @@ def test_normal_one_year_chart_fits_all_limits():
     assert doc['source_metadata']['rejected_observations'] == 0
 
 
+def test_251_valid_observations_are_not_mislabelled_incomplete_year():
+    from datetime import datetime, timedelta, timezone
+    payload = chart_fixture()
+    entry = payload['chart']['result'][0]
+    start = datetime(2025, 1, 1, 13, tzinfo=timezone.utc)
+    days = [start + timedelta(days=i) for i in range(365) if (start + timedelta(days=i)).weekday() < 5]
+    days = days[:1] + days[11:]
+    assert len(days) == 251
+    entry['timestamp'] = [int(day.timestamp()) for day in days]
+    entry['indicators'] = {'quote': [{'open': [100] * 251, 'high': [101] * 251,
+        'low': [99] * 251, 'close': [100] * 251, 'volume': [1000] * 251}]}
+    entry.pop('events')
+    doc = market_data.normalize_yahoo_chart('TEST', payload, now=CHART_AS_OF)
+    assert len(doc['records']) == 251
+    assert not any('one trading year' in warning for warning in doc['quality_warnings'])
+    assert any('methodology are unverified' in warning for warning in doc['quality_warnings'])
+
+
 def test_unrepresentable_adjustment_number_is_unavailable_not_fatal():
     payload = chart_fixture()
     payload['chart']['result'][0]['indicators']['adjclose'][0]['adjclose'] = [10 ** 500, None, True]

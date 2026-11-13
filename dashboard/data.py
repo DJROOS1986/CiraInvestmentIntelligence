@@ -1,10 +1,41 @@
 """Read local snapshots or integrity-checked immutable Azure research batches."""
 import hashlib
 import json
+import math
 from datetime import datetime, timezone
 from pathlib import Path
 
 TICKERS = tuple(c["ticker"] for c in __import__("json").loads((__import__("pathlib").Path(__file__).resolve().parents[1] / "config" / "universe.json").read_text(encoding="utf-8"))["companies"])
+
+
+def format_money(value, currency, compact=True):
+    """Presentation only: abbreviate magnitudes without changing stored values."""
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return 'Unavailable'
+    if not math.isfinite(value):
+        return 'Unavailable'
+    prefix = '$' if currency == 'USD' else (currency or 'Currency unavailable') + ' '
+    magnitude = abs(value)
+    sign = '-' if value < 0 else ''
+    if not compact and magnitude < 1e6:
+        return f'{sign}{prefix}{magnitude:,.2f}'
+    if magnitude >= 1e15:
+        return f'{sign}{prefix}{magnitude:.1e}'
+    units = [(1, ''), (1e3, 'K'), (1e6, 'M'), (1e9, 'B'), (1e12, 'T')]
+    index = max((i for i, (scale, _) in enumerate(units) if magnitude >= scale), default=0)
+    # Promote values whose displayed rounding would otherwise produce 1000K/M/B.
+    if index < len(units) - 1 and round(magnitude / units[index][0], 1) >= 1000:
+        index += 1
+    scale, suffix = units[index]
+    number = f'{magnitude / scale:.1f}' if suffix else f'{magnitude:,.2f}'
+    return f'{sign}{prefix}{number}{suffix}'
+
+
+def money_help(value, currency):
+    """Expose the original report number, without display rounding."""
+    if format_money(value, currency) == 'Unavailable':
+        return 'Value unavailable in this report; no estimate substituted.'
+    return f'{currency or "Currency unavailable"} · Report value: {value:,}. Display rounding only.'
 
 
 def read_json(data):
@@ -144,6 +175,7 @@ def research_disclosures(report, prices, batch_created_at_utc=None):
     bcg_source = bcg.get('provenance') or {}
     source = financial.get('source_metadata') or {}
     adjustment = market.get('adjustment') or prices.get('adjustment') or {}
+    actions = prices.get('corporate_actions') or {}
     quality = market.get('quality') or {}
     filing_dates = financial.get('filing_dates') or sorted({
         row['Filing date'] for row in financial_provenance_rows(financial)
@@ -170,6 +202,23 @@ def research_disclosures(report, prices, batch_created_at_utc=None):
         'Rejected observations': metadata.get('rejected_observations'),
         'Exchange timezone': metadata.get('exchange_timezone'),
         'Trading date basis': metadata.get('date_basis'),
+        'Exchange': metadata.get('exchange'),
+        'Rejected dates': ', '.join(metadata.get('rejected_dates') or []) or None,
+        'Rejection reasons': metadata.get('rejection_reasons'),
+        'Session continuity': quality.get('continuity_status'),
+        'Unobserved weekdays (uncertain)': quality.get('unobserved_weekdays'),
+        'Confirmed missing sessions': quality.get('confirmed_missing_sessions'),
+        'Verified holiday sessions': quality.get('verified_holiday_sessions'),
+        'Calendar verification': quality.get('calendar_note') or 'Unavailable; holidays and missing sessions not verified',
+        'Daily return status': quality.get('daily_return_status') or 'Legacy estimate; reliability not assessed',
+        'Period price-change status': quality.get('period_return_status') or 'Legacy estimate; reliability not assessed',
+        'Moving-average status': quality.get('moving_average_status'),
+        'Adjusted-close candidates available': adjustment.get('candidate_available'),
+        'Adjusted-close candidate coverage complete': adjustment.get('candidate_complete'),
+        'Invalid adjusted-close candidates': adjustment.get('invalid_candidate_observations'),
+        'Reported split events': len(actions['splits']) if isinstance(actions.get('splits'), list) else None,
+        'Reported dividend events': len(actions['dividends']) if isinstance(actions.get('dividends'), list) else None,
+        'Corporate-action coverage': actions.get('coverage'),
         'Volatility status': quality.get('volatility_status') or 'Legacy estimate; reliability not assessed',
         'Annualization convention': market.get('annualization_trading_days'),
         'Research batch created UTC': batch_created_at_utc,
@@ -179,3 +228,44 @@ def research_disclosures(report, prices, batch_created_at_utc=None):
         'BCG research date': bcg_source.get('source_summary_date'),
         'BCG verification': bcg.get('verification_note') or 'Not independently verified',
     }
+
+
+def disclosure_groups(report, prices, batch_created_at_utc=None):
+    """Group the existing disclosure facts, retaining legacy unavailable fields."""
+    facts = research_disclosures(report, prices, batch_created_at_utc)
+    groups = {name: {} for name in (
+        'Financial reporting and SEC provenance', 'Market data and historical coverage',
+        'Returns, volatility, and corporate-action quality', 'BCG classification provenance',
+        'Research timestamps and freshness')}
+    timestamps = {'SEC snapshot written UTC', 'SEC retrieval timestamp', 'Market retrieval UTC',
+                  'Research batch created UTC', 'Company report generated UTC'}
+    financial = {'Reported currency'}
+    market = {'Historical window', 'Price observations', 'Rejected observations', 'Rejected dates',
+              'Rejection reasons', 'Exchange timezone', 'Trading date basis', 'Exchange'}
+    for label, value in facts.items():
+        group = 'Returns, volatility, and corporate-action quality'
+        if label.startswith(('Financial', 'SEC')) or label in financial:
+            group = 'Financial reporting and SEC provenance'
+        if label.startswith('Market') or label in market:
+            group = 'Market data and historical coverage'
+        if label.startswith('BCG'):
+            group = 'BCG classification provenance'
+        if label in timestamps:
+            group = 'Research timestamps and freshness'
+        groups[group][label] = value
+    return groups
+
+
+def active_warnings(report):
+    """Coalesce only known equivalent warnings; preserve unknown/legacy evidence.
+
+    The downloadable report retains the original warning list verbatim.
+    """
+    adjustments = {
+        'Historical price returns may exclude dividends and corporate-action adjustments',
+        'Corporate-action completeness and provider close adjustment methodology are unverified',
+    }
+    warnings = report.get('data_quality', {}).get('warnings') or []
+    combined = ('Corporate-action completeness and provider close adjustment methodology are unverified; '
+                'historical price returns may exclude dividends and corporate-action adjustments')
+    return list(dict.fromkeys(combined if warning in adjustments else warning for warning in warnings))

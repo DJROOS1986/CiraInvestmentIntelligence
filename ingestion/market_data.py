@@ -222,8 +222,10 @@ def normalize_yahoo_chart(symbol, payload, now=None):
             raise ValueError('Invalid corporate-action event entry')
     if rejected:
         warnings.append(f'{sum(rejected.values())} market observations rejected; no values filled')
-    if len(records) < 252:
-        warnings.append('Fewer than 252 valid price observations; one trading year is not established')
+    # Session counts vary by exchange/year; 252 is an annualization convention,
+    # not evidence that a requested calendar year is incomplete.
+    if len(records) < 61:
+        warnings.append('Short price history: fewer than 60 observed returns')
     warnings.append('Corporate-action completeness and provider close adjustment methodology are unverified')
     return {
         'symbol': symbol, 'provider': 'Yahoo Finance chart endpoint (prototype)',
