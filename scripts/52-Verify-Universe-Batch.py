@@ -41,16 +41,19 @@ def load_processor():
 
 
 def detect_currency(doc, fp):
-    """Reporting currency of annual revenue when it is not USD (latest full-year 10-K/20-F value)."""
+    """Reporting currency: the unit with the most full-year 10-K/20-F revenue years (ties: newest data).
+    Ignores USD convenience translations that some foreign filers add for a single year."""
     facts = doc.get("facts", {}).get("us-gaap", {})
-    best = None
+    years, newest = {}, {}
     for label in fp.TAGS["revenue"]:
         for unit, items in facts.get(label, {}).get("units", {}).items():
             for item in items:
                 if item.get("form") in ("10-K", "10-K/A", "20-F", "20-F/A") and item.get("end") and item.get("start"):
-                    if best is None or item["end"] > best[0]:
-                        best = (item["end"], unit)
-    return best[1] if best else None
+                    years.setdefault(unit, set()).add(item["end"])
+                    newest[unit] = max(newest.get(unit, ""), item["end"])
+    if not years:
+        return None
+    return max(years, key=lambda u: (len(years[u]), newest[u]))
 
 
 def load_fx():
@@ -109,13 +112,10 @@ def main():
             with tempfile.TemporaryDirectory() as tmp:
                 path = Path(tmp) / "facts.json"
                 path.write_bytes(facts)
-                currency = "USD"
-                try:
+                currency = detect_currency(json.loads(facts), fp) or "USD"
+                if currency == "USD":
                     result = fp.extract_annual_metrics(path)
-                except ValueError:
-                    currency = detect_currency(json.loads(facts), fp)
-                    if currency in (None, "USD"):
-                        raise
+                else:
                     result = fp.extract_annual_metrics(path, currency=currency, fx=load_fx().EcbRates())
                     out["fallbacks"].append(f"converted from {currency}")
             out["period"] = result["period_end"]

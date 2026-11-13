@@ -1,0 +1,29 @@
+{
+  "proposed_companies": [
+    {
+      "ticker": "XPEV",
+      "cik": "0001810997",
+      "sec_name": "XPENG INC.",
+      "bcg_name": "XPENG INC.",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "reporting_currency": "USD",
+      "notes": []
+    }
+  ],
+  "checks": [
+    {
+      "ticker": "XPEV",
+      "bcg_name": "XPENG INC.",
+      "star": "",
+      "form": "20-F 2026-04-16",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [
+        "converted from CNY"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    }
+  ]
+}
