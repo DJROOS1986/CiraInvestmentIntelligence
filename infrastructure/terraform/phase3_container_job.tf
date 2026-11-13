@@ -11,7 +11,7 @@ variable "cira_sec_user_agent" {
 
 variable "cira_pipeline_image_tag" {
   type    = string
-  default = "research-20261112-5fbe58f"
+  default = "research-20261113-d52cdba"
 }
 
 resource "azurerm_container_app_job" "cira" {
