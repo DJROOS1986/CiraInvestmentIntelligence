@@ -31,10 +31,10 @@ EQUITY_TAGS = (
 )
 
 
-def _instant_value(facts, tag, period_end):
+def _instant_value(facts, tag, period_end, currency="USD"):
     """Latest-filed 10-K balance-sheet value of a tag at period_end, or None."""
     best = None
-    for item in facts.get(tag, {}).get("units", {}).get("USD", []):
+    for item in facts.get(tag, {}).get("units", {}).get(currency, []):  # instant currency
         if item.get("form") not in ("10-K", "10-K/A", "20-F", "20-F/A") or item.get("val") is None:
             continue
         if item.get("end") != period_end or item.get("start") is not None or not item.get("filed"):
@@ -44,18 +44,18 @@ def _instant_value(facts, tag, period_end):
     return best
 
 
-def derive_total_liabilities(facts, period_end):
+def derive_total_liabilities(facts, period_end, currency="USD"):
     """Current + non-current liabilities, accepted only if it equals total liabilities and equity minus equity."""
-    current = _instant_value(facts, "LiabilitiesCurrent", period_end)
-    noncurrent = _instant_value(facts, "LiabilitiesNoncurrent", period_end)
-    total = _instant_value(facts, "LiabilitiesAndStockholdersEquity", period_end)
+    current = _instant_value(facts, "LiabilitiesCurrent", period_end, currency)
+    noncurrent = _instant_value(facts, "LiabilitiesNoncurrent", period_end, currency)
+    total = _instant_value(facts, "LiabilitiesAndStockholdersEquity", period_end, currency)
     if not (current and noncurrent and total):
         return None
     summed = current["val"] + noncurrent["val"]
     if summed <= 0:
         return None
     for equity_tag in EQUITY_TAGS:
-        equity = _instant_value(facts, equity_tag, period_end)
+        equity = _instant_value(facts, equity_tag, period_end, currency)
         if equity and abs(summed - (total["val"] - equity["val"])) <= DERIVED_TOLERANCE * summed:
             return summed, {
                 "tag": "derived: LiabilitiesCurrent + LiabilitiesNoncurrent",
@@ -68,7 +68,7 @@ def derive_total_liabilities(facts, period_end):
     return None
 
 
-def extract_annual_metrics(companyfacts_path):
+def extract_annual_metrics(companyfacts_path, currency="USD", fx=None):
     with Path(companyfacts_path).open(
         encoding="utf-8"
     ) as f:
@@ -80,7 +80,7 @@ def extract_annual_metrics(companyfacts_path):
         for tag in TAGS[metric]:
             values = facts.get(tag, {}).get(
                 "units", {}
-            ).get("USD", [])
+            ).get(currency, [])  # reporting currency
 
             for item in values:
                 if item.get("form") not in ("10-K", "10-K/A", "20-F", "20-F/A"):
@@ -150,9 +150,28 @@ def extract_annual_metrics(companyfacts_path):
             provenance[metric] = None
 
     if results["total_liabilities"] is None:
-        derived = derive_total_liabilities(facts, period_end)
+        derived = derive_total_liabilities(facts, period_end, currency)
         if derived is not None:
             results["total_liabilities"], provenance["total_liabilities"] = derived
+
+    reported, fx_info = None, None
+    if currency != "USD":
+        if fx is None:
+            raise ValueError(f"Exchange rates required to convert {currency} financials")
+        reported, rates = dict(results), {}
+        for metric, value in list(results.items()):
+            if value is None:
+                continue
+            prov = provenance.get(metric) or {}
+            if metric in INSTANT:
+                rate, basis = fx.closing(currency, period_end), "closing"
+            else:
+                if not prov.get("start"):
+                    raise ValueError(f"Missing period start for {metric}")
+                rate, basis = fx.average(currency, prov["start"], prov.get("period_end") or period_end), "average"
+            results[metric] = value * rate
+            rates[metric] = {"usd_per_unit": rate, "basis": basis}
+        fx_info = {"source": fx.source, "currency": currency, "rates": rates}
 
     ocf = results["operating_cash_flow"]
     capex = results["capital_expenditure"]
@@ -169,5 +188,8 @@ def extract_annual_metrics(companyfacts_path):
         "period_end": period_end,
         "currency": "USD",
         "metrics_usd": results,
+        "reported_currency": currency,
+        "reported_metrics": reported,
+        "fx": fx_info,
         "provenance": provenance,
     }

@@ -48,6 +48,13 @@ def provenance_warnings(financial):
         return []
     metrics = financial.get('metrics_usd') or {}
     out = []
+    fx = financial.get('fx')
+    if isinstance(fx, dict) and fx.get('rates'):
+        rates = fx['rates']
+        avg = (rates.get('revenue') or {}).get('usd_per_unit')
+        close = (rates.get('total_assets') or {}).get('usd_per_unit')
+        parts = ([f'average rate {avg:.4f} for flows'] if avg else []) + ([f"closing rate {close:.4f} at {financial.get('period_end')}"] if close else [])
+        out.append(f"Financials converted from {fx.get('currency')} to USD ({fx.get('source')}): " + ', '.join(parts))
     for key in ('revenue', 'net_income', 'total_assets', 'total_liabilities', 'operating_cash_flow', 'capital_expenditure'):
         label = key.replace('_', ' ').capitalize()
         if metrics.get(key) is None:

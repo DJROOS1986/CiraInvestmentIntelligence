@@ -1,0 +1,130 @@
+{
+  "proposed_companies": [
+    {
+      "ticker": "ASML",
+      "cik": "0000937966",
+      "sec_name": "ASML HOLDING NV",
+      "bcg_name": "ASML Holding",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "reporting_currency": "USD",
+      "notes": []
+    },
+    {
+      "ticker": "BABA",
+      "cik": "0001577552",
+      "sec_name": "Alibaba Group Holding Ltd",
+      "bcg_name": "Alibaba Group",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "reporting_currency": "USD",
+      "notes": []
+    },
+    {
+      "ticker": "TCOM",
+      "cik": "0001269238",
+      "sec_name": "Trip.com Group Ltd",
+      "bcg_name": "Trip.com Group",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "reporting_currency": "USD",
+      "notes": []
+    },
+    {
+      "ticker": "HSAI",
+      "cik": "0001861737",
+      "sec_name": "Hesai Group",
+      "bcg_name": "Hesai Group",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "reporting_currency": "USD",
+      "notes": []
+    },
+    {
+      "ticker": "YMM",
+      "cik": "0001838413",
+      "sec_name": "Full Truck Alliance Co. Ltd.",
+      "bcg_name": "Full Truck Alliance",
+      "bcg_required": true,
+      "annual_form": "20-F",
+      "reporting_currency": "USD",
+      "notes": []
+    }
+  ],
+  "checks": [
+    {
+      "ticker": "ASML",
+      "bcg_name": "ASML Holding",
+      "star": "95",
+      "form": "20-F 2026-02-25",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [
+        "converted from EUR"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "BABA",
+      "bcg_name": "Alibaba Group",
+      "star": "",
+      "form": "20-F 2026-05-20",
+      "period": "2026-03-31",
+      "missing": [
+        "capital_expenditure"
+      ],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY (gaps)"
+    },
+    {
+      "ticker": "TCOM",
+      "bcg_name": "Trip.com Group",
+      "star": "",
+      "form": "20-F 2026-04-28",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "XPEV",
+      "bcg_name": "XPENG INC.",
+      "star": "",
+      "form": "20-F 2026-04-16",
+      "period": "2020-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "NOT READY (stale financials)"
+    },
+    {
+      "ticker": "HSAI",
+      "bcg_name": "Hesai Group",
+      "star": "72",
+      "form": "20-F 2026-04-24",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    },
+    {
+      "ticker": "YMM",
+      "bcg_name": "Full Truck Alliance",
+      "star": "",
+      "form": "20-F 2026-04-14",
+      "period": "2025-12-31",
+      "missing": [],
+      "fallbacks": [
+        "revenue=RevenueFromContractWithCustomerIncludingAssessedTax",
+        "net_income=ProfitLoss",
+        "capital_expenditure=PaymentsToAcquireProductiveAssets"
+      ],
+      "price": "5 closes USD",
+      "verdict": "READY"
+    }
+  ]
+}

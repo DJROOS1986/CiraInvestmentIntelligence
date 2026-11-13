@@ -14,6 +14,24 @@ spec = importlib.util.spec_from_file_location(
 module = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(module)
 
+_FX = None
+
+
+def _fx_args(ticker):
+    """Reporting currency from config/universe.json (default USD) and a shared ECB rate provider."""
+    global _FX
+    companies = json.loads((ROOT / "config" / "universe.json").read_text(encoding="utf-8"))["companies"]
+    currency = next((c.get("reporting_currency", "USD") for c in companies if c["ticker"] == ticker), "USD")
+    if currency == "USD":
+        return {}
+    if _FX is None:
+        fx_spec = importlib.util.spec_from_file_location("cira_fx", ROOT / "portfolio-engine" / "fx.py")
+        fx_module = importlib.util.module_from_spec(fx_spec)
+        fx_spec.loader.exec_module(fx_module)
+        _FX = fx_module.EcbRates()
+    return {"currency": currency, "fx": _FX}
+
+
 def main():
     sources = {}
 
@@ -30,7 +48,7 @@ def main():
 
     for ticker, source in sources.items():
         try:
-            result = module.extract_annual_metrics(source)
+            result = module.extract_annual_metrics(source, **_fx_args(ticker))
         except Exception as exc:  # per-company: exclude and continue
             __import__("runpy").run_path(str(__import__("pathlib").Path(__file__).resolve().parents[1] / "portfolio-engine" / "run_state.py"))["exclude"](ticker, "financial-report", exc)
             continue

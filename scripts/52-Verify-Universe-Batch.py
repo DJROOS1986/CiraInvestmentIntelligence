@@ -40,6 +40,26 @@ def load_processor():
     return module
 
 
+def detect_currency(doc, fp):
+    """Reporting currency of annual revenue when it is not USD (latest full-year 10-K/20-F value)."""
+    facts = doc.get("facts", {}).get("us-gaap", {})
+    best = None
+    for label in fp.TAGS["revenue"]:
+        for unit, items in facts.get(label, {}).get("units", {}).items():
+            for item in items:
+                if item.get("form") in ("10-K", "10-K/A", "20-F", "20-F/A") and item.get("end") and item.get("start"):
+                    if best is None or item["end"] > best[0]:
+                        best = (item["end"], unit)
+    return best[1] if best else None
+
+
+def load_fx():
+    spec = importlib.util.spec_from_file_location("cira_fx", ROOT / "portfolio-engine" / "fx.py")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--count", type=int, default=15)
@@ -89,7 +109,15 @@ def main():
             with tempfile.TemporaryDirectory() as tmp:
                 path = Path(tmp) / "facts.json"
                 path.write_bytes(facts)
-                result = fp.extract_annual_metrics(path)
+                currency = "USD"
+                try:
+                    result = fp.extract_annual_metrics(path)
+                except ValueError:
+                    currency = detect_currency(json.loads(facts), fp)
+                    if currency in (None, "USD"):
+                        raise
+                    result = fp.extract_annual_metrics(path, currency=currency, fx=load_fx().EcbRates())
+                    out["fallbacks"].append(f"converted from {currency}")
             out["period"] = result["period_end"]
             metrics, provenance = result["metrics_usd"], result.get("provenance") or {}
             out["missing"] = [k for k in ("net_income", "total_assets", "total_liabilities", "operating_cash_flow", "capital_expenditure")
@@ -118,7 +146,7 @@ def main():
             if out["verdict"].startswith("READY"):
                 notes = [NOTE_ROWS[r["bcg_name"]]] if r["bcg_name"] in NOTE_ROWS else []
                 proposals.append({"ticker": ticker, "cik": cik, "sec_name": r["entity"], "bcg_name": r["bcg_name"],
-                                  "bcg_required": True, "annual_form": out["form"].split()[0], "notes": notes})
+                                  "bcg_required": True, "annual_form": out["form"].split()[0], "reporting_currency": currency, "notes": notes})
         except Exception as exc:  # one company never stops the batch check
             out["verdict"] = f"ERROR: {type(exc).__name__}: {exc}"[:120]
         results.append(out)
