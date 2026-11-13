@@ -1,0 +1,44 @@
+{
+  "permissions": {
+    "defaultMode": "default",
+    "allow": [
+      "Bash(git status*)",
+      "Bash(git diff*)",
+      "Bash(git log*)",
+      "Bash(git --no-pager *)",
+      "Bash(python -m pytest*)",
+      "Bash(gh run list*)",
+      "Bash(gh run view*)",
+      "Bash(az containerapp job execution list*)",
+      "Bash(az containerapp job show*)",
+      "Bash(az containerapp show*)",
+      "Bash(az monitor log-analytics query*)",
+      "Bash(az acr repository show-tags*)"
+    ],
+    "ask": [
+      "Bash(git add*)",
+      "Bash(git commit*)",
+      "Bash(git push*)",
+      "Bash(*Invoke-CIRA-Terraform*)",
+      "Bash(*37-Build-CIRA-Image*)",
+      "Bash(*containerapp job start*)",
+      "Bash(az * update*)",
+      "Bash(az * create*)",
+      "Bash(az * set*)"
+    ],
+    "deny": [
+      "Bash(*terraform*state*)",
+      "Bash(*terraform*destroy*)",
+      "Bash(*terraform*force-unlock*)",
+      "Bash(*terraform*import*)",
+      "Bash(az * delete*)",
+      "Bash(git push*--force*)",
+      "Bash(git reset --hard*)",
+      "Bash(*dev.tfvars*)",
+      "Bash(*backend.hcl*)",
+      "Read(./infrastructure/terraform/dev.tfvars)",
+      "Read(./infrastructure/terraform/backend.hcl)",
+      "Read(./ingestion/config.json)"
+    ]
+  }
+}

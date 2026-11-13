@@ -89,3 +89,5 @@ __pycache__/
 .phase55-staging/
 .phase55-promotion.lock
 .phase55-promotion-journal.json
+.claude/settings.local.json
+.claude/worktrees/
