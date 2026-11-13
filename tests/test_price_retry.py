@@ -189,7 +189,21 @@ def test_malformed_company_response_does_not_abort_other_companies(stage13, monk
 def test_unsupported_json_depth_or_encoding_is_a_controlled_failure(stage13, monkeypatch, body):
     response = StreamedChartResponse(body)
     monkeypatch.setattr(stage13.requests, 'get', lambda *a, **k: response)
+    if body.startswith(b'['):
+        # Decoder recursion thresholds differ across Python builds/platforms.
+        # Exercise this exception handler explicitly instead of assuming a limit.
+        def reject_depth(payload):
+            raise RecursionError('synthetic decoder depth limit')
+        monkeypatch.setattr(stage13.json, 'loads', reject_depth)
     with pytest.raises(ValueError, match='JSON structure or encoding'):
+        stage13.fetch_prices('TEST')
+    assert response.closed
+
+
+def test_real_nested_chart_response_is_rejected_on_every_platform(stage13, monkeypatch):
+    response = StreamedChartResponse(b'[' * 2000 + b']' * 2000)
+    monkeypatch.setattr(stage13.requests, 'get', lambda *a, **k: response)
+    with pytest.raises(ValueError):
         stage13.fetch_prices('TEST')
     assert response.closed
 
