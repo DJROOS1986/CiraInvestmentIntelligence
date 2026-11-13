@@ -72,8 +72,21 @@ try {
     if ($Details) { $out }
 
     Write-Step '4/4 Review'
-    $json    = (& $tfExe show -json $planFile) -join "`n" | ConvertFrom-Json
-    $changes = @($json.resource_changes | Where-Object { ($_.change.actions -join ',') -notin @('no-op', 'read') })
+    $showOut = @(& $tfExe show -json $planFile)
+    if ($LASTEXITCODE -ne 0 -or $showOut.Count -eq 0) { throw 'terraform show failed (often: out of memory - close VS Code and other programs). Nothing applied.' }
+    try { $json = ($showOut -join "`n") | ConvertFrom-Json } catch { throw 'The plan could not be read as JSON. Nothing applied.' }
+    if ($null -eq $json) { throw 'The plan could not be read. Nothing applied.' }
+    $changes = @(@($json.resource_changes) | Where-Object { $null -ne $_ -and $_.address -and (($_.change.actions -join ',') -notin @('no-op', 'read')) })
+    $planLine = @($out | Where-Object { $_ -match '^Plan: \d+ to add, \d+ to change, \d+ to destroy' }) | Select-Object -First 1
+    if ($planLine -match '^Plan: (\d+) to add, (\d+) to change, (\d+) to destroy') {
+        $wantAdd = [int]$Matches[1]; $wantChange = [int]$Matches[2]; $wantDestroy = [int]$Matches[3]
+        $gotAdd = @($changes | Where-Object { $_.change.actions -contains 'create' }).Count
+        $gotChange = @($changes | Where-Object { $_.change.actions -contains 'update' }).Count
+        $gotDestroy = @($changes | Where-Object { $_.change.actions -contains 'delete' }).Count
+        if ($gotAdd -ne $wantAdd -or $gotChange -ne $wantChange -or $gotDestroy -ne $wantDestroy) {
+            throw "Review mismatch: Terraform says '$planLine' but the review found $gotAdd add / $gotChange change / $gotDestroy destroy. Nothing applied."
+        }
+    } elseif ($changes.Count -gt 0) { throw 'Changes found but no Plan summary line. Nothing applied.' }
     if ($changes.Count -eq 0) { Write-Host 'No changes. Azure matches the code.' -ForegroundColor Green; return }
 
     $changes | ForEach-Object { '{0,-16} {1}' -f ($_.change.actions -join '+'), $_.address }
